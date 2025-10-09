@@ -112,9 +112,9 @@ WSGI_APPLICATION = 'api_autoservice.wsgi.application'
 
 # CORDS
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:4200',
-    'http://127.0.0.1:4200',
-    # 'https://evanasabatella1989.github.io/Frontend-SdA-Deploy/'
+    # 'http://localhost:4200',
+    # 'http://127.0.0.1:4200',
+    'https://evanasabatella1989.github.io/Frontend-SdA-Deploy/'
 ]
 
 # CORS_ALLOW_ALL_ORIGINS = True  # Habilita CORS para todas las solicitudes
