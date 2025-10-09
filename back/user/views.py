@@ -111,6 +111,7 @@ def register(request):
         serializer.save()
         return Response({"message": "El usuario se registró correctamente"}, status=status.HTTP_201_CREATED)
     
+    print(serializer.errors)  # 👈 agregá esto
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
