@@ -116,16 +116,21 @@ CORS_ORIGIN_WHITELIST = [
     'http://127.0.0.1:4200',
     # 'https://evanasabatella1989.github.io/Frontend-SdA-Deploy/'
 ]
-CORS_ALLOW_ALL_ORIGINS = True  # Habilita CORS para todas las solicitudes
+
+# CORS_ALLOW_ALL_ORIGINS = True  # Habilita CORS para todas las solicitudes
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",
-    # "https://evanasabatella1989.github.io/Frontend-SdA-Deploy/",  
+    # "http://localhost:4200",
+    # "https://evanasabatella1989.github.io/Frontend-SdA-Deploy/", 
+    "https://evanasabatella1989.github.io",  
 ]
 
+CORS_ALLOW_ALL_ORIGINS = False  # desactivar para producción
+
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:4200',
-    'http://127.0.0.1:4200',
+    # 'http://localhost:4200',
+    # 'http://127.0.0.1:4200',
     # 'https://evanasabatella1989.github.io/Frontend-SdA-Deploy/',
+    "https://evanasabatella1989.github.io",
 ]
 
 
