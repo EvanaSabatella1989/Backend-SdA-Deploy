@@ -6,6 +6,8 @@ import cloudinary.uploader
 import cloudinary.api
 from decouple import config
 
+import dj_database_url
+
 
 
 
@@ -126,19 +128,28 @@ CSRF_TRUSTED_ORIGINS = [
     # 'https://evanasabatella1989.github.io/Frontend-SdA-Deploy/',
 ]
 
-# Database
 
-DATABASES = {
-   
-    'default': {
-        'ENGINE': 'mysql.connector.django',
-        'NAME': config("DB_NAME", default="autoservice"),
-        'USER': config("DB_USER", default="root"),
-        'PASSWORD': config("DB_PASSWORD", default="root"),
-        'HOST': config("DB_HOST", default="localhost"),
-        'PORT': config("DB_PORT", default="3306"),
+# Base de datos
+if config("RENDER", default=False, cast=bool):
+    # Usar PostgreSQL en Render
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=config("DATABASE_URL"),
+            conn_max_age=600
+        )
     }
-}
+else:
+    # Usar MySQL localmente
+    DATABASES = {
+        'default': {
+            'ENGINE': 'mysql.connector.django',
+            'NAME': config("DB_NAME", default="autoservice"),
+            'USER': config("DB_USER", default="root"),
+            'PASSWORD': config("DB_PASSWORD", default="root"),
+            'HOST': config("DB_HOST", default="localhost"),
+            'PORT': config("DB_PORT", default="3306"),
+        }
+    }
 
 
 # Password validation
