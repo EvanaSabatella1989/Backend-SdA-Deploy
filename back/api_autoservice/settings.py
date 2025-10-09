@@ -118,14 +118,9 @@ CORS_ORIGIN_WHITELIST = [
     'https://evanasabatella1989.github.io'
 ]
 
-# CORS_ALLOW_ALL_ORIGINS = True  # Habilita CORS para todas las solicitudes
-CORS_ALLOWED_ORIGINS = [
-    # "http://localhost:4200",
-    # "https://evanasabatella1989.github.io/Frontend-SdA-Deploy/", 
-    "https://evanasabatella1989.github.io",  
-]
 
-CORS_ALLOW_ALL_ORIGINS = False  # desactivar para producción
+
+CORS_ALLOW_ALL_ORIGINS = True  # desactivar para producción
 
 CSRF_TRUSTED_ORIGINS = [
     # 'http://localhost:4200',
@@ -236,6 +231,13 @@ REST_FRAMEWORK = {
 APPEND_SLASH = False
 
 FRONTEND_URL = "https://evanasabatella1989.github.io/Frontend-SdA-Deploy"
+
+# CORS_ALLOW_ALL_ORIGINS = True  # Habilita CORS para todas las solicitudes
+CORS_ALLOWED_ORIGINS = [
+    # "http://localhost:4200",
+    "https://evanasabatella1989.github.io/Frontend-SdA-Deploy/", 
+    "https://evanasabatella1989.github.io",  
+]
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': config("CLOUD_NAME"),
