@@ -115,7 +115,7 @@ def register(request):
     
     # 👈 Aquí capturamos los errores exactos del serializer
     return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
+register.parser_classes = [JSONParser]  # ⬅️ esto fuerza JSON
 
 # Obtener perfil del usuario autenticado
 @api_view(['GET'])
