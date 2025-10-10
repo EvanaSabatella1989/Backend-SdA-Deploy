@@ -64,6 +64,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from user.models import Cliente
 from .serializers import ClienteSerializer, UserSerializer, UserReservaSerializer
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser
 
 
 # Función para generar tokens JWT
