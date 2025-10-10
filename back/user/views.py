@@ -63,6 +63,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from user.models import Cliente
 from .serializers import ClienteSerializer, UserSerializer, UserReservaSerializer
+from django.views.decorators.csrf import csrf_exempt
 
 
 # Función para generar tokens JWT
@@ -102,6 +103,7 @@ def login_view(request):
 
 
 # Registro de usuario
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
