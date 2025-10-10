@@ -108,6 +108,7 @@ def login_view(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
+    print("ENTRO A REGISTER")  # 🔹 Esto debería aparecer en los logs
     print("DATA RECIBIDA:", request.data)  # 🔹 aquí ves qué llega
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
