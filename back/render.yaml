@@ -3,14 +3,15 @@ services:
     name: backend-sda
     env: python
     plan: free
-    buildCommand:
+    buildCommand: |
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
       python manage.py makemigrations --noinput
       python manage.py migrate --noinput
-    startCommand: "gunicorn back.wsgi:application"
+    startCommand: gunicorn back.wsgi:application
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: back.api_autoservice.settings
       - key: PYTHON_VERSION
-        value: 3.11
+        value: 3.12.6
+
