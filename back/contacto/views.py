@@ -7,28 +7,36 @@ from django.core.mail import send_mail
 from rest_framework.response import Response
 from django.conf import settings
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 
 class ContactoViewSet(viewsets.ModelViewSet):
     queryset = Contacto.objects.all()
     serializer_class = ContactoSerializer
+    permission_classes = [AllowAny]  
 
-
-
-@api_view(['POST'])
-def enviar_contacto(request):
-    serializer = ContactoSerializer(data=request.data)
-    if serializer.is_valid():
-        # guardar en la base de datos
+    def perform_create(self, serializer):
         contacto = serializer.save()
-        # enviar correo al admin
-        asunto = "Nuevo mensaje de contacto"
-        mensaje = f"""
-        Nombre: {contacto.nombre}
-        Email: {contacto.email}
-        Mensaje: {contacto.mensaje}
-        """
-        send_mail(asunto, mensaje, settings.DEFAULT_FROM_EMAIL, ['admin@tuempresa.com'])
 
-        return Response({"mensaje": "Formulario enviado con éxito"}, status=status.HTTP_201_CREATED)
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # datos del mensaje
+        nombre = contacto.nombre
+        email = contacto.email
+        mensaje = contacto.mensaje
+
+        # cuerpo del correo
+        cuerpo_email = f"""
+        Nuevo mensaje de contacto recibido:
+
+        Nombre: {nombre}
+        Email: {email}
+        Mensaje:
+        {mensaje}
+        """
+
+        # envio del correo
+        send_mail(
+            subject='Nuevo mensaje desde la página de contacto',
+            message=cuerpo_email,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[settings.ADMIN_EMAIL], 
+            fail_silently=False,
+        )

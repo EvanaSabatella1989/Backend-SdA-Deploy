@@ -18,6 +18,7 @@ class ServicioViewSet(viewsets.ModelViewSet):
     queryset=Servicio.objects.all()
     serializer_class=ServicioSerializer
     parser_classes=(MultiPartParser, FormParser,JSONParser)
+    # permission_classes = [AllowAny]
 
     @permission_classes([AllowAny])  
     def list(self,request):
