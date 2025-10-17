@@ -6,7 +6,7 @@ from .serializer import ProductoSerializer
 from .models import Producto
 from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse
@@ -26,6 +26,7 @@ class ProductoUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
 # @permission_classes([AllowAny])  # Esto hace que la vista sea pública
 @api_view(['GET', 'POST','PUT','DELETE'])
 @permission_classes([AllowAny])
+@parser_classes([MultiPartParser, FormParser])  # 👈 esta línea es CLAVE
 def productoList(request, format=None):
     parser_classes = (MultiPartParser, FormParser)  # ✅ habilitar multipart
     '''
@@ -44,7 +45,7 @@ def productoList(request, format=None):
         # data = JSONParser().parse(request)    
         # data.imagen=request.FILES.get('imagen')
         # serializer = SnippetSerializer(data=data)     #1
-        
+        print("🧩 Datos recibidos:", request.data)
         serializer = ProductoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()

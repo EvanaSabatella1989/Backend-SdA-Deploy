@@ -1,15 +1,13 @@
 from rest_framework import serializers
 from django.conf import settings
 from .models import Producto
+from categoria.models import Categoria
 
 class ProductoSerializer(serializers.ModelSerializer):
-    # imagen = serializers.SerializerMethodField()
-
-    # def get_imagen(self, obj):
-    #     request = self.context.get('request')
-    #     if obj.imagen:
-    #         return request.build_absolute_uri(obj.imagen.url) if request else f"{settings.MEDIA_URL}{obj.imagen}"
-    #     return ""
+    # 🔹 Forzamos a que interprete 'categoria' como un ID válido de Categoria
+    categoria = serializers.PrimaryKeyRelatedField(
+        queryset=Categoria.objects.all()
+    )
 
     class Meta:
         model=Producto
@@ -18,3 +16,7 @@ class ProductoSerializer(serializers.ModelSerializer):
             'imagen': {'required': False, 'allow_null': True}
         }
         depth = 1
+    
+    def create(self, validated_data):
+        print("validated_data:", validated_data)
+        return super().create(validated_data)
