@@ -10,10 +10,10 @@ __pycache__/
 *.pyo
 
 # Evitar archivos de migraciones en Django
-migrations/
-migrations/__pycache__/
-migrations/*.py
-!migrations/__init__.py
+# migrations/
+# migrations/__pycache__/
+# migrations/*.py
+# !migrations/__init__.py
 
 # Evitar caché en carpetas específicas
 **/__pycache__/
@@ -26,8 +26,13 @@ __pycache__/
 *.pyo
 
 # Ignorar migraciones excepto __init__.py
-**/migrations/
-!**/migrations/__init__.py
+# **/migrations/
+# !**/migrations/__init__.py
+
 node_modules/
-package-lock.json       
+package-lock.json  
+
+# Permitir migraciones de Django
+!**/migrations/
+!**/migrations/*.py
                                                                                                                                                                                                                                                                                     
