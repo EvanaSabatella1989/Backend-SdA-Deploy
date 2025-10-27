@@ -45,8 +45,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = config("DEBUG", default=False, cast=bool)
-DEBUG = False
+DEBUG = config("DEBUG", default=False, cast=bool)
+# DEBUG = False
 
 LOGGING = {
     'version': 1,
@@ -62,7 +62,12 @@ LOGGING = {
     },
 }
 
-ALLOWED_HOSTS = ["backend-sda-deploy.onrender.com"]
+# ALLOWED_HOSTS = ["backend-sda-deploy.onrender.com"]
+
+if config("RENDER", default=False, cast=bool):
+    ALLOWED_HOSTS = ["backend-sda-deploy.onrender.com"]
+else:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 
 
@@ -139,8 +144,8 @@ CORS_ORIGIN_WHITELIST = [
 CORS_ALLOW_ALL_ORIGINS = True  # desactivar para producción
 
 CSRF_TRUSTED_ORIGINS = [
-    # 'http://localhost:4200',
-    # 'http://127.0.0.1:4200',
+    'http://localhost:4200',
+    'http://127.0.0.1:4200',
     # 'https://evanasabatella1989.github.io/Frontend-SdA-Deploy/',
     "https://evanasabatella1989.github.io",
 ]
@@ -250,7 +255,8 @@ FRONTEND_URL = "https://evanasabatella1989.github.io/Frontend-SdA-Deploy"
 
 # CORS_ALLOW_ALL_ORIGINS = True  # Habilita CORS para todas las solicitudes
 CORS_ALLOWED_ORIGINS = [
-    # "http://localhost:4200",
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
     # "https://evanasabatella1989.github.io/Frontend-SdA-Deploy/", 
     "https://evanasabatella1989.github.io",
     "https://backend-sda-deploy.onrender.com",  
