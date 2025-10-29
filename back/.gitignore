@@ -35,4 +35,10 @@ package-lock.json
 # Permitir migraciones de Django
 !**/migrations/
 !**/migrations/*.py
+
+# Ignorar migraciones de Django
+back/**/migrations/*.py
+!back/**/migrations/__init__.py
+
+package.json
                                                                                                                                                                                                                                                                                     
