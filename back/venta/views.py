@@ -152,9 +152,12 @@ class ReferenceMPView(APIView):
         preference_data = {
             "items": newlist,
             "back_urls": {
-                "success": f"{FRONTEND_URL}/pago-exitoso",
-                "failure": f"{FRONTEND_URL}/pago-fallido",
-                "pending": f"{FRONTEND_URL}/pago-pendiente",
+                # "success": f"{FRONTEND_URL}/pago-exitoso",
+                # "failure": f"{FRONTEND_URL}/pago-fallido",
+                # "pending": f"{FRONTEND_URL}/pago-pendiente",
+                "success": "https://evanasabatella1989.github.io/Frontend-SdA-Deploy/#/pago-exitoso",
+                "failure": "https://evanasabatella1989.github.io/Frontend-SdA-Deploy/#/pago-fallido",
+                "pending": "https://evanasabatella1989.github.io/Frontend-SdA-Deploy/#/pago-pendiente",
             },
             "auto_return": "approved"
         }
