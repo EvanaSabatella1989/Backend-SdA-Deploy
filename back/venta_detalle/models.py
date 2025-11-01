@@ -7,9 +7,9 @@ from datetime import datetime
 
 
 class VentaDetalle(models.Model):
-    precio = models.DecimalField(max_digits=6, decimal_places=2)
+    precio = models.DecimalField(max_digits=15, decimal_places=2)
     cantidad = models.IntegerField(default=0)
-    descuento = models.DecimalField(max_digits=5, decimal_places=2)
+    descuento = models.DecimalField(max_digits=10, decimal_places=2)
     venta = models.ForeignKey(Venta, on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
 
