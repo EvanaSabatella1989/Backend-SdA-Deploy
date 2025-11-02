@@ -192,13 +192,23 @@ class ConfirmarPagoView(APIView):
             carrito = get_object_or_404(Carrito, user=cliente)  # Obtener el carrito del cliente
             total_venta = sum(item.producto.precio * item.cantidad for item in carrito.items.all())
 
+            # 🔸 Consultar pago en Mercado Pago
+            payment_info = sdk.payment().get(payment_id)
+            if payment_info['status'] != 200:
+                return Response({"error": "No se pudo obtener la información del pago desde Mercado Pago"},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            payment_data = payment_info["response"]
+            tipo_pago = payment_data.get("payment_type_id", "desconocido")
+            estado = payment_data.get("status", "pendiente")
+
             with transaction.atomic():  # Garantizar que todas las operaciones sean atómicas
                 # Crear la venta
                 venta = Venta.objects.create(
                     numero_factura=payment_id,
                     total=Decimal(total_venta),
-                    tipo_pago="tarjeta",
-                    estado="completada",
+                    tipo_pago=tipo_pago,
+                    estado="completada" if estado == "approved" else estado,
                     cliente=cliente
                 )
 
