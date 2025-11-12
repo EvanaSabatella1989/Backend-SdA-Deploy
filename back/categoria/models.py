@@ -10,7 +10,7 @@ class Categoria(models.Model):
         ("vehiculo", "Vehiculo"),
     ]
 
-    nombre = models.CharField(max_length=100, blank=False)
+    nombre = models.CharField(max_length=50, blank=False)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default="producto")
 
     class Meta:

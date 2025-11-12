@@ -64,6 +64,8 @@ from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from .serializer import CategoriaSerializer
 from .models import Categoria
+from rest_framework import status
+from rest_framework.response import Response
 
 
 class CategoriaViewSet(viewsets.ModelViewSet):
@@ -81,6 +83,26 @@ class CategoriaViewSet(viewsets.ModelViewSet):
         if tipo:
             queryset = queryset.filter(tipo=tipo)
         return queryset
+
+    def destroy(self, request, *args, **kwargs):
+        categoria = self.get_object()
+
+        # 🔍 Verificar si tiene productos o servicios asociados
+        tiene_productos = hasattr(categoria, 'productos') and categoria.productos.exists()
+        tiene_servicios = hasattr(categoria, 'servicios') and categoria.servicios.exists()
+
+        if tiene_productos or tiene_servicios:
+            return Response(
+                {"error": "No se puede eliminar la categoría porque tiene productos o servicios asociados."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ Si no tiene relaciones, se elimina normalmente
+        categoria.delete()
+        return Response(
+            {"mensaje": "Categoría eliminada correctamente."},
+            status=status.HTTP_204_NO_CONTENT
+        )
 
 
     
