@@ -176,7 +176,7 @@ class ReferenceMPView(APIView):
 
 
 class ConfirmarPagoView(APIView):
-     def post(self, request, format=None):
+    def post(self, request, format=None):
         """
         Confirma el pago exitoso, guarda la venta en la BD y vacía el carrito.
         """
@@ -192,30 +192,52 @@ class ConfirmarPagoView(APIView):
             carrito = get_object_or_404(Carrito, user=cliente)  # Obtener el carrito del cliente
             total_venta = sum(item.producto.precio * item.cantidad for item in carrito.items.all())
 
+            # Consultar pago en Mercado Pago
+            payment_info = sdk.payment().get(payment_id)
+            if payment_info['status'] != 200:
+                return Response({"error": "No se pudo obtener la información del pago desde Mercado Pago"},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            payment_data = payment_info["response"]
+            tipo_pago = payment_data.get("payment_type_id", "desconocido")
+            estado = payment_data.get("status", "pendiente")
+
             with transaction.atomic():  # Garantizar que todas las operaciones sean atómicas
                 # Crear la venta
                 venta = Venta.objects.create(
                     numero_factura=payment_id,
                     total=Decimal(total_venta),
-                    tipo_pago="tarjeta",
-                    estado="completada",
+                    tipo_pago=tipo_pago,
+                    estado="completada" if estado == "approved" else estado,
                     cliente=cliente
                 )
 
                 # Guardar detalles de venta
                 for item in carrito.items.all():
+                    producto = item.producto
+                    cantidad_vendida = item.cantidad
+
+                    # Crear el detalle de venta
                     VentaDetalle.objects.create(
                         venta=venta,
-                        producto=item.producto,
-                        cantidad=item.cantidad,
-                        precio=item.producto.precio,
+                        producto=producto,
+                        cantidad=cantidad_vendida,
+                        precio=producto.precio,
                         descuento=Decimal(0)
                     )
 
-                # Vaciar el carrito eliminando los items
+                    #  Descontar cantidad disponible del producto
+                    if producto.cantidad >= cantidad_vendida:
+                        producto.cantidad -= cantidad_vendida
+                        producto.save()
+                    else:
+                        raise ValueError(f"Cantidad insuficiente para el producto {producto.nombre}")
+
+                # Vaciar el carrito
                 carrito.items.all().delete()
 
-            return Response({"message": "Venta registrada y carrito vaciado con éxito"}, status=status.HTTP_200_OK)
+            return Response({"message": "Venta registrada, cantidad actualizada y carrito vaciado con éxito"},
+                            status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
