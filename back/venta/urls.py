@@ -1,9 +1,13 @@
 from django.urls import path, include
 from rest_framework import routers
-from .views import ReferenceMPView, ConfirmarPagoView
+from .views import ReferenceMPView, ConfirmarPagoView,VentaDetailView,VentaListView
 
 
 urlpatterns = [
     path('preference', ReferenceMPView.as_view()),
     path("confirmar-pago", ConfirmarPagoView.as_view(), name="confirmar-pago"),
+    path('ventas/', VentaListView.as_view(), name='ventas'),
+    path('ventas/<int:pk>/', VentaDetailView.as_view(), name='venta-detalle'),
 ]
+
+

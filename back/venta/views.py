@@ -120,6 +120,7 @@ from django.db import transaction
 import mercadopago
 from django.shortcuts import get_object_or_404
 from django.conf import settings
+from .serializer import VentaSerializer
 
 # Agrega credenciales de Mercado Pago
 sdk = mercadopago.SDK("APP_USR-4989301092010028-031112-8ec03be037cc76704baaec21a1604e49-2319025513")
@@ -244,6 +245,37 @@ class ConfirmarPagoView(APIView):
 
 
 
+class VentaListView(APIView):
+
+    def get(self, request):
+        ventas = Venta.objects.all().order_by('-fecha_pago')
+        serializer = VentaSerializer(ventas, many=True)
+        return Response(serializer.data)
+
+
+class VentaDetailView(APIView):
+
+    def get(self, request, pk):
+        venta = get_object_or_404(Venta, pk=pk)
+        serializer = VentaSerializer(venta)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        venta = get_object_or_404(Venta, pk=pk)
+        serializer = VentaSerializer(venta, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        venta = get_object_or_404(Venta, pk=pk)
+        venta.delete()
+        return Response(
+            {"message": "Venta eliminada correctamente"},
+            status=status.HTTP_204_NO_CONTENT
+        )
 
 
 
