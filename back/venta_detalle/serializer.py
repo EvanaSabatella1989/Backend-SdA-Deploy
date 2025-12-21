@@ -1,13 +1,8 @@
 from rest_framework import serializers
-from .models import Venta
+from django.conf import settings
+from .models import Producto
 from venta_detalle.models import VentaDetalle
 
-class VentaSerializer(serializers.ModelSerializer):
-    cliente = serializers.PrimaryKeyRelatedField(read_only=True)
-    class Meta:
-        model = Venta
-        fields = '__all__'
-        
 class VentaDetalleSerializer(serializers.ModelSerializer):
     producto_nombre = serializers.CharField(source='producto.nombre', read_only=True)
 
@@ -19,4 +14,3 @@ class VentaDetalleSerializer(serializers.ModelSerializer):
             'precio',
             'descuento'
         ]
-
