@@ -16,7 +16,21 @@ class ProductoSerializer(serializers.ModelSerializer):
             'imagen': {'required': False, 'allow_null': True}
         }
         depth = 1
+
+    def validate_precio(self, value):
+        if value <= 0:
+            raise serializers.ValidationError(
+                "El precio debe ser mayor a 0"
+            )
+        return value
     
+    def validate_cantidad(self, value):
+        if value <= 0:
+            raise serializers.ValidationError(
+                "La cantidad debe ser un número entero mayor a 0"
+            )
+        return value
+        
     def create(self, validated_data):
         print("validated_data:", validated_data)
         return super().create(validated_data)
