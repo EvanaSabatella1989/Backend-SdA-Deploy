@@ -16,7 +16,16 @@ class VentaDetalleSerializer(serializers.ModelSerializer):
 
 
 class VentaSerializer(serializers.ModelSerializer):
-    cliente = serializers.PrimaryKeyRelatedField(read_only=True)
+    cliente_id = serializers.IntegerField(source='cliente.id', read_only=True)
+
+    cliente_nombre = serializers.CharField(
+        source='cliente.user.first_name',
+        read_only=True
+    )
+    cliente_apellido = serializers.CharField(
+        source='cliente.user.last_name',
+        read_only=True
+    )
     detalles = VentaDetalleSerializer(
         source='ventadetalle_set',
         many=True,
