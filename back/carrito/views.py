@@ -107,15 +107,34 @@ def obtener_carrito(request):
 def agregar_al_carrito(request):
     cliente = get_cliente_from_request(request)
     producto_id = request.data.get('producto_id')
-    cantidad = request.data.get('cantidad', 1)
+    cantidad = int(request.data.get('cantidad', 1))
 
-    carrito, created = Carrito.objects.get_or_create(user=cliente)
+    carrito, _ = Carrito.objects.get_or_create(user=cliente)
     producto = get_object_or_404(Producto, id=producto_id)
+
+    # 🚫 Sin stock
+    if producto.cantidad == 0:
+        return Response(
+            {"error": "Producto sin stock"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
-    item, created = CarritoItem.objects.get_or_create(carrito=carrito, producto=producto)
-    if not created:
-        item.cantidad += int(cantidad)
-        item.save()
+    item, created = CarritoItem.objects.get_or_create(carrito=carrito, producto=producto, defaults={'cantidad': 0})
+
+    nueva_cantidad = item.cantidad + cantidad
+
+    # 🚫 No superar stock
+    if nueva_cantidad > producto.cantidad:
+        return Response(
+            {
+                "error": "Stock insuficiente",
+                "stock_disponible": producto.cantidad
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    item.cantidad = nueva_cantidad
+    item.save()
 
     return Response({"message": "Producto agregado al carrito"}, status=status.HTTP_200_OK)
 
@@ -137,19 +156,55 @@ def eliminar_del_carrito(request, producto_id):
 def modificar_cantidad_carrito(request):
     cliente = get_cliente_from_request(request)
     producto_id = request.data.get('producto_id')
-    nueva_cantidad = request.data.get('cantidad')
+    nueva_cantidad = int(request.data.get('cantidad'))
 
-    if not producto_id or not nueva_cantidad:
-        return Response({"error": "Se requiere producto_id y cantidad"}, status=status.HTTP_400_BAD_REQUEST)
+    # if not producto_id or not nueva_cantidad:
+    #     return Response({"error": "Se requiere producto_id y cantidad"}, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        carrito = Carrito.objects.get(user=cliente)
-        item = CarritoItem.objects.get(carrito=carrito, producto_id=producto_id)
-        item.cantidad = int(nueva_cantidad)
-        item.save()
-        return Response({"message": "Cantidad actualizada correctamente"}, status=status.HTTP_200_OK)
-    except CarritoItem.DoesNotExist:
-        return Response({"error": "Producto no encontrado en el carrito"}, status=status.HTTP_404_NOT_FOUND)
+    # try:
+    #     carrito = Carrito.objects.get(user=cliente)
+    #     item = CarritoItem.objects.get(carrito=carrito, producto_id=producto_id)
+    #     item.cantidad = int(nueva_cantidad)
+    #     item.save()
+    #     return Response({"message": "Cantidad actualizada correctamente"}, status=status.HTTP_200_OK)
+    # except CarritoItem.DoesNotExist:
+    #     return Response({"error": "Producto no encontrado en el carrito"}, status=status.HTTP_404_NOT_FOUND)
+
+    carrito = get_object_or_404(Carrito, user=cliente)
+    item = get_object_or_404(CarritoItem, carrito=carrito, producto_id=producto_id)
+    producto = item.producto
+
+    # 🚫 Sin stock
+    if producto.cantidad == 0:
+        return Response(
+            {"error": "Producto sin stock"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # 🚫 Supera stock
+    if nueva_cantidad > producto.cantidad:
+        return Response(
+            {
+                "error": "Stock insuficiente",
+                "stock_disponible": producto.cantidad
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # 🚫 Cantidad inválida
+    if nueva_cantidad < 1:
+        return Response(
+            {"error": "Cantidad inválida"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    item.cantidad = nueva_cantidad
+    item.save()
+
+    return Response(
+        {"message": "Cantidad actualizada correctamente"},
+        status=status.HTTP_200_OK
+    )
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])

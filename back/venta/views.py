@@ -204,6 +204,18 @@ class ConfirmarPagoView(APIView):
             estado = payment_data.get("status", "pendiente")
 
             with transaction.atomic():  # Garantizar que todas las operaciones sean atómicas
+
+                 # 🔒 VALIDACIÓN FINAL DE STOCK (ANTES DE CREAR LA VENTA)
+                for item in carrito.items.select_for_update():
+                    if item.cantidad > item.producto.cantidad:
+                        return Response(
+                            {
+                                "error": f"Stock insuficiente para {item.producto.nombre}",
+                                "stock_disponible": item.producto.cantidad
+                            },
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
                 # Crear la venta
                 venta = Venta.objects.create(
                     numero_factura=payment_id,
@@ -228,11 +240,14 @@ class ConfirmarPagoView(APIView):
                     )
 
                     #  Descontar cantidad disponible del producto
-                    if producto.cantidad >= cantidad_vendida:
-                        producto.cantidad -= cantidad_vendida
-                        producto.save()
-                    else:
-                        raise ValueError(f"Cantidad insuficiente para el producto {producto.nombre}")
+                    # if producto.cantidad >= cantidad_vendida:
+                    #     producto.cantidad -= cantidad_vendida
+                    #     producto.save()
+                    # else:
+                    #     raise ValueError(f"Cantidad insuficiente para el producto {producto.nombre}")
+
+                    producto.cantidad -= cantidad_vendida
+                    producto.save()
 
                 # Vaciar el carrito
                 carrito.items.all().delete()
