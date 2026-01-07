@@ -62,7 +62,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from user.models import Cliente
-from .serializers import ClienteSerializer, UserSerializer, UserReservaSerializer
+from .serializers import ClienteSerializer, UserSerializer, UserReservaSerializer,UserRegisterSerializer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 
@@ -104,20 +104,43 @@ def login_view(request):
 
 
 # Registro de usuario
+# @csrf_exempt
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
+# def register(request):
+#     print("ENTRO A REGISTER")  
+#     print("DATA RECIBIDA:", request.data)  
+#     serializer = UserSerializer(data=request.data)
+#     if serializer.is_valid():
+#         serializer.save()
+#         return Response({"message": "El usuario se registró correctamente"}, status=status.HTTP_201_CREATED)
+    
+  
+#     return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+# register.parser_classes = [JSONParser]  
+
+
+# registro tomando la doble password
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
-    print("ENTRO A REGISTER")  # 🔹 Esto debería aparecer en los logs
-    print("DATA RECIBIDA:", request.data)  # 🔹 aquí ves qué llega
-    serializer = UserSerializer(data=request.data)
+    serializer = UserRegisterSerializer(data=request.data)
+
     if serializer.is_valid():
         serializer.save()
-        return Response({"message": "El usuario se registró correctamente"}, status=status.HTTP_201_CREATED)
-    
-    # 👈 Aquí capturamos los errores exactos del serializer
-    return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-register.parser_classes = [JSONParser]  # ⬅️ esto fuerza JSON
+        return Response(
+            {"message": "El usuario se registró correctamente"},
+            status=status.HTTP_201_CREATED
+        )
+
+    return Response(
+        {"errors": serializer.errors},
+        status=status.HTTP_400_BAD_REQUEST
+    )
+
+register.parser_classes = [JSONParser]
+
 
 # Obtener perfil del usuario autenticado
 @api_view(['GET'])
