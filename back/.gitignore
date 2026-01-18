@@ -1,3 +1,4 @@
+.idea/
 ./.vscode
 ./venv
 /venv
@@ -35,4 +36,3 @@ package-lock.json
 # Permitir migraciones de Django
 !**/migrations/
 !**/migrations/*.py
-                                                                                                                                                                                                                                                                                    

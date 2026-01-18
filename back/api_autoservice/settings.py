@@ -21,17 +21,17 @@ EMAIL_PORT = 2525  # Puerto de Mailtrap (Usa 587 si necesitas TLS)
 EMAIL_HOST_USER = 'c1e209a5685478'  # Copia el usuario desde Mailtrap
 EMAIL_HOST_PASSWORD = '458a83918d03ff'  # Copia la contraseña desde Mailtrap
 EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False  # No usar SSL  
+EMAIL_USE_SSL = False  # No usar SSL
 
 
 
-# evitar que se cierre sesion 
+# evitar que se cierre sesion
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # 
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  
-    'ROTATE_REFRESH_TOKENS': True,               
-    'BLACKLIST_AFTER_ROTATION': True,            
-    'UPDATE_LAST_LOGIN': True,                   
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  #
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
 }
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -257,9 +257,9 @@ FRONTEND_URL = "https://evanasabatella1989.github.io/Frontend-SdA-Deploy"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
-    # "https://evanasabatella1989.github.io/Frontend-SdA-Deploy/", 
+    # "https://evanasabatella1989.github.io/Frontend-SdA-Deploy/",
     "https://evanasabatella1989.github.io",
-    "https://backend-sda-deploy.onrender.com",  
+    "https://backend-sda-deploy.onrender.com",
 ]
 
 CLOUDINARY_STORAGE = {
@@ -269,4 +269,3 @@ CLOUDINARY_STORAGE = {
 }
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
