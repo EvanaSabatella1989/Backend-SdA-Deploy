@@ -6,6 +6,8 @@ from carrito.serializers import CarritoSerializer
 from user.models import Cliente
 from reserva.serializer import ReservaSerializer
 from vehiculo.serializers import VehiculoReservaSerializer
+from django.contrib.auth.password_validation import validate_password
+
 
 class UserSerializer(serializers.ModelSerializer):
     vehiculos = VehiculoSerializer(many=True, read_only=True, source="cliente.vehiculo_set")
@@ -105,6 +107,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "password2": "Las contraseñas no coinciden"
             })
+
+        # validar desde Django
+        validate_password(data['password1'])
         return data
 
     def create(self, validated_data):
