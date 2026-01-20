@@ -9,7 +9,7 @@ from vehiculo.serializers import VehiculoReservaSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
-
+import re
 
 class UserSerializer(serializers.ModelSerializer):
     vehiculos = VehiculoSerializer(many=True, read_only=True, source="cliente.vehiculo_set")
@@ -85,23 +85,31 @@ class UserReservaSerializer(serializers.ModelSerializer):
     
 #  para doble paassword obligatorio
 class UserRegisterSerializer(serializers.ModelSerializer):
-    password1 = serializers.CharField(write_only=True, min_length=6)
-    password2 = serializers.CharField(write_only=True, min_length=6)
+    password1 = serializers.CharField(write_only=True, min_length=8)
+    password2 = serializers.CharField(write_only=True, min_length=8)
 
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name', 'password1', 'password2')
 
     def validate(self, data):
-        # contraseñas iguales
-        if data['password1'] != data['password2']:
+        password = data['password1']
+
+        # bloquear solo letras
+        if re.fullmatch(r'[a-zA-Z]+', password):
+            raise serializers.ValidationError({
+                "password1": "La contraseña no puede contener solo letras."
+            })
+
+        # contraseñas distintas
+        if password != data['password2']:
             raise serializers.ValidationError({
                 "password2": "Las contraseñas no coinciden"
             })
 
-        # validadores de Django comun,similar,numerica
+        # validadores Django común,similar,numérica
         try:
-            validate_password(data['password1'])
+            validate_password(password)
         except DjangoValidationError as e:
             raise serializers.ValidationError({
                 "password1": e.messages
