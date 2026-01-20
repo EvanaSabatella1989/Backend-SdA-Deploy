@@ -6,6 +6,7 @@ from carrito.serializers import CarritoSerializer
 from user.models import Cliente
 from reserva.serializer import ReservaSerializer
 from vehiculo.serializers import VehiculoReservaSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class UserSerializer(serializers.ModelSerializer):
     vehiculos = VehiculoSerializer(many=True, read_only=True, source="cliente.vehiculo_set")
@@ -125,3 +126,18 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         )
 
         return user
+
+
+#Crear serializer JWT custom
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # 👇 AGREGAMOS INFO DE ROL
+        token['is_staff'] = user.is_staff
+        token['is_superuser'] = user.is_superuser
+        token['email'] = user.email
+
+        return token
