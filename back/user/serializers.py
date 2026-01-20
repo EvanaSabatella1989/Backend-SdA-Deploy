@@ -93,11 +93,20 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         fields = ('email', 'first_name', 'last_name', 'password1', 'password2')
 
     def validate(self, data):
+        # contraseñas iguales
         if data['password1'] != data['password2']:
             raise serializers.ValidationError({
                 "password2": "Las contraseñas no coinciden"
             })
-        validate_password(data['password1'])
+
+        # validadores de Django comun,similar,numerica
+        try:
+            validate_password(data['password1'])
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({
+                "password1": e.messages
+            })
+
         return data
 
     def create(self, validated_data):
@@ -115,7 +124,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             user=user,
             defaults={'direccion': '', 'num_telefono': ''}
         )
+
         return user
+
 
 
 #Crear serializer JWT custom
