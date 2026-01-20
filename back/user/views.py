@@ -141,7 +141,7 @@ def register(request):
         status=status.HTTP_400_BAD_REQUEST
     )
 
-    register.parser_classes = [JSONParser]
+register.parser_classes = [JSONParser]
 
 
 # Obtener perfil del usuario autenticado

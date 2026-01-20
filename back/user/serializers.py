@@ -12,8 +12,6 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 
 
 class UserSerializer(serializers.ModelSerializer):
-    password1 = serializers.CharField(write_only=True)
-    password2 = serializers.CharField(write_only=True)
     vehiculos = VehiculoSerializer(many=True, read_only=True, source="cliente.vehiculo_set")
     carrito = CarritoSerializer(read_only=True, source="cliente.carrito")
     reservas = ReservaSerializer(many=True, read_only=True, source="cliente.reserva_set")
@@ -21,7 +19,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta():
         model = User
         fields = ("id", "email", "first_name", "last_name", "password", 'vehiculos', 'carrito', 'reservas')
-
         extra_kwargs = {
             "password": {"write_only": True},
             "email": {
@@ -35,44 +32,24 @@ class UserSerializer(serializers.ModelSerializer):
             },
         }
 
-    def validate(self, data):
-        if data['password1'] != data['password2']:
-            raise serializers.ValidationError({
-                'password2': 'Las contraseñas no coinciden'
-            })
-
-        # validacion de seguridad de django
-        try:
-            validate_password(data['password1'])
-        except DjangoValidationError as e:
-            raise serializers.ValidationError({
-                'password1': e.messages
-            })
-
-        return data
-
     def create(self, validated_data):
-        validated_data.pop('password2')
-        password = validated_data.pop('password1')
-
         user = User.objects.create_user(
             email=validated_data["email"],
-            #password=validated_data["password"],
-            password=password,
+            password=validated_data["password"],
             first_name=validated_data["first_name"],
             last_name=validated_data["last_name"]
         )
-        
-        #para poder crear usuario en angular
+
+        # para poder crear usuario en angular
         Cliente.objects.get_or_create(user=user, defaults={'direccion': '', 'num_telefono': ''})
-        
+
         return user
-    
+
 
 class ClienteSerializer(serializers.ModelSerializer):
     email = serializers.CharField(source='user.email', read_only=True)
-    first_name = serializers.CharField(source='user.first_name',  required=False)
-    last_name = serializers.CharField(source='user.last_name',  required=False)
+    first_name = serializers.CharField(source='user.first_name', required=False)
+    last_name = serializers.CharField(source='user.last_name', required=False)
     direccion = serializers.CharField(required=False, allow_blank=True)
     num_telefono = serializers.CharField(required=False, allow_blank=True)
 
@@ -85,7 +62,7 @@ class ClienteSerializer(serializers.ModelSerializer):
         instance.direccion = validated_data.get('direccion', instance.direccion)
         instance.num_telefono = validated_data.get('num_telefono', instance.num_telefono)
         instance.save()
-        
+
         # aca agregamos los datos del usuario relacionado al cliente para editar
         user_data = validated_data.get('user', {})
         if user_data:
@@ -93,7 +70,7 @@ class ClienteSerializer(serializers.ModelSerializer):
             user.first_name = user_data.get('first_name', user.first_name)
             user.last_name = user_data.get('last_name', user.last_name)
             user.save()
-            
+
         return instance
     
 
@@ -115,26 +92,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ('email', 'first_name', 'last_name', 'password1', 'password2')
 
-        extra_kwargs = {
-            "email": {
-                "required": True,
-                "allow_blank": False,
-                "validators": [
-                    validators.UniqueValidator(
-                        queryset=User.objects.all(),
-                        message="Ya existe un usuario con este correo electrónico."
-                    )
-                ]
-            }
-        }
-
     def validate(self, data):
         if data['password1'] != data['password2']:
             raise serializers.ValidationError({
                 "password2": "Las contraseñas no coinciden"
             })
-
-        # validar desde Django
         validate_password(data['password1'])
         return data
 
@@ -145,16 +107,14 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             email=validated_data['email'],
             password=password,
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', '')
         )
 
-        # Se crea el cliente automáticamente
         Cliente.objects.get_or_create(
             user=user,
             defaults={'direccion': '', 'num_telefono': ''}
         )
-
         return user
 
 
