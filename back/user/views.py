@@ -180,7 +180,22 @@ class ClienteViewSet(viewsets.ModelViewSet):
     queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
 
+    def destroy(self, request, *args, **kwargs):
+        cliente = self.get_object()
+        user = cliente.user
+
+        # se borra primero el usuario
+        user.delete()
+
+        return Response(
+            {"message": "Cliente y usuario eliminados correctamente"},
+            status=status.HTTP_204_NO_CONTENT
+        )
 
 # Crear la vista JWT custom
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+    
+
+
