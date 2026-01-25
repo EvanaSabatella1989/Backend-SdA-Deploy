@@ -56,8 +56,12 @@ class ReservaViewSet(viewsets.ModelViewSet):
             nombre_cliente = cliente.user.get_full_name()
             correo_cliente = cliente.user.email
 
-            # MAIL ADMIN
-            mensaje_admin = f"""
+            logger.info(f"Reserva creada con éxito ID={reserva.id}")
+
+            # ================= MAILS =================
+            try:
+                # MAIL ADMIN
+                mensaje_admin = f"""
     Nueva reserva registrada.
 
     Cliente: {nombre_cliente}
@@ -69,16 +73,16 @@ class ReservaViewSet(viewsets.ModelViewSet):
     Sucursal: {turno.sucursal.nombre}
     """
 
-            send_mail(
-                'Nueva Reserva de Turno',
-                mensaje_admin,
-                settings.DEFAULT_FROM_EMAIL,
-                [settings.ADMIN_EMAIL],
-                fail_silently=False,
-            )
+                send_mail(
+                    'Nueva Reserva de Turno',
+                    mensaje_admin,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [settings.ADMIN_EMAIL],
+                    fail_silently=False,
+                )
 
-            # MAIL CLIENTE
-            mensaje_cliente = f"""
+                # MAIL CLIENTE
+                mensaje_cliente = f"""
     Hola {nombre_cliente},
 
     ¡Gracias por reservar en Service del Automotor! 🚗🔧
@@ -91,15 +95,18 @@ class ReservaViewSet(viewsets.ModelViewSet):
     ¡Te esperamos!
     """
 
-            send_mail(
-                'Confirmación de tu reserva',
-                mensaje_cliente,
-                settings.DEFAULT_FROM_EMAIL,
-                [correo_cliente],
-                fail_silently=False,
-            )
+                send_mail(
+                    'Confirmación de tu reserva',
+                    mensaje_cliente,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [correo_cliente],
+                    fail_silently=False,
+                )
 
-            logger.info(f"📧 Correos enviados para reserva ID={reserva.id}")
+                logger.info(f"📧 Correos enviados para reserva ID={reserva.id}")
+
+            except Exception as mail_error:
+                logger.error(f"❌ Error enviando correos: {mail_error}")
 
         except Exception as e:
             logger.exception(f"Error creando reserva: {str(e)}")
