@@ -14,14 +14,24 @@ import dj_database_url
 
 
 
-# configuracion para el envio de correos a  Mailtrap y hacer las pruebas
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.mailtrap.io'  # Servidor SMTP de Mailtrap
-EMAIL_PORT = 2525  # Puerto de Mailtrap (Usa 587 si necesitas TLS)
-EMAIL_HOST_USER = 'c1e209a5685478'  # Copia el usuario desde Mailtrap
-EMAIL_HOST_PASSWORD = '458a83918d03ff'  # Copia la contraseña desde Mailtrap
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False  # No usar SSL
+# configuracion para recibir las reservas y recuperar contraseñas
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool, default=True)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool, default=False)
+
+DEFAULT_FROM_EMAIL = config(
+    'DEFAULT_FROM_EMAIL',
+    default=EMAIL_HOST_USER
+)
+
+ADMIN_EMAIL = config(
+    'ADMIN_EMAIL',
+    default=EMAIL_HOST_USER
+)
+
 
 
 

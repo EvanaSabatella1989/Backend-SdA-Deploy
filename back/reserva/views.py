@@ -6,6 +6,8 @@ from django.core.mail import send_mail
 from .serializer import ReservaSerializer
 from .models import Reserva,Turno
 import logging
+from django.conf import settings
+
 from datetime import datetime, timedelta
 # from sucursal.models import HorarioSucursal
 from rest_framework import status
@@ -72,14 +74,14 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 send_mail(
                     'Nueva Reserva de Turno',
                     f"""
-                    Nombre: {nombre_cliente}
-                    Email: {correo_cliente}
-                    Fecha: {turno.fecha} a las {turno.hora}
-                    Servicio: {reserva.servicio.nombre}
-                    Sucursal: {turno.sucursal.nombre}
-                    """,
-                    'autoservicebsas@gmail.com',
-                    ['autoservicebsas@gmail.com'],
+                Nombre: {nombre_cliente}
+                Email: {correo_cliente}
+                Fecha: {turno.fecha} a las {turno.hora}
+                Servicio: {reserva.servicio.nombre}
+                Sucursal: {turno.sucursal.nombre}
+                """,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [settings.ADMIN_EMAIL, correo_cliente],
                     fail_silently=False,
                 )
                 logger.info(f"Correo enviado correctamente para la reserva ID={reserva.id}")
