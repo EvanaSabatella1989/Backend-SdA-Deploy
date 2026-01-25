@@ -42,13 +42,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
             cliente = Cliente.objects.get(user=user)
             turno = serializer.validated_data['turno']
 
-            logger.debug(
-                f"Intentando reservar horario ID={turno.id} | "
-                f"Fecha={turno.fecha} | Hora={turno.hora}"
-            )
-
             if not turno.disponible:
-                logger.warning(f"Horario ID={turno.id} ya estaba reservado.")
                 raise serializers.ValidationError("Este horario ya está reservado")
 
             turno.disponible = False
@@ -62,35 +56,28 @@ class ReservaViewSet(viewsets.ModelViewSet):
             nombre_cliente = cliente.user.get_full_name()
             correo_cliente = cliente.user.email
 
-            logger.info(
-                f"Reserva creada con éxito ID={reserva.id} "
-                f"para cliente {nombre_cliente}"
-            )
-
-            #  COOREO PARA ADMIN
+            # MAIL ADMIN
             mensaje_admin = f"""
-    Se ha registrado una nueva reserva en el sistema.
+    Nueva reserva registrada.
 
     Cliente: {nombre_cliente}
     Correo: {correo_cliente}
 
     Servicio: {reserva.servicio.nombre}
     Fecha: {turno.fecha}
-    Horario: {turno.hora}
+    Hora: {turno.hora}
     Sucursal: {turno.sucursal.nombre}
     """
 
-            threading.Thread(
-                target=enviar_mail_reserva,
-                args=(
-                    'Nueva Reserva de Turno',
-                    mensaje_admin,
-                    [settings.ADMIN_EMAIL],
-                ),
-                daemon=True
-            ).start()
+            send_mail(
+                'Nueva Reserva de Turno',
+                mensaje_admin,
+                settings.DEFAULT_FROM_EMAIL,
+                [settings.ADMIN_EMAIL],
+                fail_silently=False,
+            )
 
-            #CORREO PARA CLIENTE
+            # MAIL CLIENTE
             mensaje_cliente = f"""
     Hola {nombre_cliente},
 
@@ -101,22 +88,16 @@ class ReservaViewSet(viewsets.ModelViewSet):
     ⏰ Hora: {turno.hora}
     🏢 Sucursal: {turno.sucursal.nombre}
 
-    Si necesitás modificar o cancelar tu turno,
-    comunicate con nosotros.
-
     ¡Te esperamos!
-    Service del Automotor
     """
 
-            threading.Thread(
-                target=enviar_mail_reserva,
-                args=(
-                    'Confirmación de tu reserva',
-                    mensaje_cliente,
-                    [correo_cliente],
-                ),
-                daemon=True
-            ).start()
+            send_mail(
+                'Confirmación de tu reserva',
+                mensaje_cliente,
+                settings.DEFAULT_FROM_EMAIL,
+                [correo_cliente],
+                fail_silently=False,
+            )
 
             logger.info(f"📧 Correos enviados para reserva ID={reserva.id}")
 
