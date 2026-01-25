@@ -33,78 +33,107 @@ class ReservaViewSet(viewsets.ModelViewSet):
 # SE ENVIA LA RESERVA AL CORREO DEL ADMIN Y CLIENTE
 # TAMBIEN SE CONFIRMA LA RESERVA Y SE ENVIA LOS DATOS A LA DB Y EL TURNO DISPONIBLE PASA A FALSE
     def perform_create(self, serializer):
-    
         logger.debug(f"📥 Datos validados recibidos: {serializer.validated_data}")
         self.reservar_turno(serializer)
 
     def reservar_turno(self, serializer):
-       
         try:
             user = self.request.user
             cliente = Cliente.objects.get(user=user)
-            reserva = serializer.save(cliente=cliente)
             turno = serializer.validated_data['turno']
-            logger.debug(f"Intentando reservar horario ID={turno.id} | Fecha={turno.fecha} | Hora={turno.hora}")
 
-            # verifico si hay disponibilidad
+            logger.debug(
+                f"Intentando reservar horario ID={turno.id} | "
+                f"Fecha={turno.fecha} | Hora={turno.hora}"
+            )
+
             if not turno.disponible:
                 logger.warning(f"Horario ID={turno.id} ya estaba reservado.")
                 raise serializers.ValidationError("Este horario ya está reservado")
 
-            # marco turno como no disponible
             turno.disponible = False
             turno.save()
-            logger.info(f"Horario ID={turno.id} marcado como no disponible.")
 
-           
-            # guardo la reserva asignando cliente y sucursal desde el turno
             reserva = serializer.save(
-            cliente=cliente,
-            sucursal=turno.sucursal)
+                cliente=cliente,
+                sucursal=turno.sucursal
+            )
 
-            # obtener datos del cliente
-            cliente=reserva.cliente
-            nombre_cliente=cliente.user.get_full_name()
-            correo_cliente=cliente.user.email
-            
-             # se guarda la reserva
-            # reserva = serializer.save(cliente=cliente)
-            
-            logger.info(f"Reserva creada con éxito ID={reserva.id} para cliente {nombre_cliente}")
+            nombre_cliente = cliente.user.get_full_name()
+            correo_cliente = cliente.user.email
 
-            # envio correo
-            mensaje = f"""
-            Nombre: {nombre_cliente}
-            Email: {correo_cliente}
-            Fecha: {turno.fecha} a las {turno.hora}
-            Servicio: {reserva.servicio.nombre}
-            Sucursal: {turno.sucursal.nombre}
-            """
+            logger.info(
+                f"Reserva creada con éxito ID={reserva.id} "
+                f"para cliente {nombre_cliente}"
+            )
+
+            #  COOREO PARA ADMIN
+            mensaje_admin = f"""
+    Se ha registrado una nueva reserva en el sistema.
+
+    Cliente: {nombre_cliente}
+    Correo: {correo_cliente}
+
+    Servicio: {reserva.servicio.nombre}
+    Fecha: {turno.fecha}
+    Horario: {turno.hora}
+    Sucursal: {turno.sucursal.nombre}
+    """
 
             threading.Thread(
                 target=enviar_mail_reserva,
                 args=(
                     'Nueva Reserva de Turno',
-                    mensaje,
-                    [settings.ADMIN_EMAIL, correo_cliente],
+                    mensaje_admin,
+                    [settings.ADMIN_EMAIL],
                 ),
+                daemon=True
             ).start()
 
-            logger.info(f"📧 Envío de correo lanzado en segundo plano para reserva ID={reserva.id}")
+            #CORREO PARA CLIENTE
+            mensaje_cliente = f"""
+    Hola {nombre_cliente},
+
+    ¡Gracias por reservar en Service del Automotor! 🚗🔧
+
+    📌 Servicio: {reserva.servicio.nombre}
+    📅 Fecha: {turno.fecha}
+    ⏰ Hora: {turno.hora}
+    🏢 Sucursal: {turno.sucursal.nombre}
+
+    Si necesitás modificar o cancelar tu turno,
+    comunicate con nosotros.
+
+    ¡Te esperamos!
+    Service del Automotor
+    """
+
+            threading.Thread(
+                target=enviar_mail_reserva,
+                args=(
+                    'Confirmación de tu reserva',
+                    mensaje_cliente,
+                    [correo_cliente],
+                ),
+                daemon=True
+            ).start()
+
+            logger.info(f"📧 Correos enviados para reserva ID={reserva.id}")
 
         except Exception as e:
             logger.exception(f"Error creando reserva: {str(e)}")
             raise
 
 
-def enviar_mail_reserva(subject, message, from_email, recipient_list):
+def enviar_mail_reserva(subject, message, recipient_list):
     try:
         send_mail(
             subject,
             message,
-            from_email,
+            settings.DEFAULT_FROM_EMAIL,
             recipient_list,
             fail_silently=False,
         )
     except Exception as e:
         logger.error(f"❌ Error enviando correo async: {str(e)}")
+
