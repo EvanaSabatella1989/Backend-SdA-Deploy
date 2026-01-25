@@ -7,11 +7,9 @@ from .serializer import ReservaSerializer
 from .models import Reserva,Turno
 import logging
 from django.conf import settings
-
 from datetime import datetime, timedelta
 # from sucursal.models import HorarioSucursal
 from rest_framework import status
-
 from django.conf import settings
 from django.http import JsonResponse
 import json
@@ -19,6 +17,11 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, serializers
 from rest_framework.permissions import IsAuthenticated
 from user.models import Cliente
+import threading
+from django.core.mail import send_mail
+from django.conf import settings
+
+
 logger = logging.getLogger(__name__)
 
 class ReservaViewSet(viewsets.ModelViewSet):
@@ -70,25 +73,38 @@ class ReservaViewSet(viewsets.ModelViewSet):
             logger.info(f"Reserva creada con éxito ID={reserva.id} para cliente {nombre_cliente}")
 
             # envio correo
-            try:
-                send_mail(
+            mensaje = f"""
+            Nombre: {nombre_cliente}
+            Email: {correo_cliente}
+            Fecha: {turno.fecha} a las {turno.hora}
+            Servicio: {reserva.servicio.nombre}
+            Sucursal: {turno.sucursal.nombre}
+            """
+
+            threading.Thread(
+                target=enviar_mail_reserva,
+                args=(
                     'Nueva Reserva de Turno',
-                    f"""
-                Nombre: {nombre_cliente}
-                Email: {correo_cliente}
-                Fecha: {turno.fecha} a las {turno.hora}
-                Servicio: {reserva.servicio.nombre}
-                Sucursal: {turno.sucursal.nombre}
-                """,
-                    settings.DEFAULT_FROM_EMAIL,
+                    mensaje,
                     [settings.ADMIN_EMAIL, correo_cliente],
-                    fail_silently=False,
-                )
-                logger.info(f"Correo enviado correctamente para la reserva ID={reserva.id}")
-            except Exception as e:
-                logger.error(f"Error enviando correo para la reserva ID={reserva.id}: {str(e)}")
+                ),
+            ).start()
+
+            logger.info(f"📧 Envío de correo lanzado en segundo plano para reserva ID={reserva.id}")
 
         except Exception as e:
             logger.exception(f"Error creando reserva: {str(e)}")
             raise
 
+
+def enviar_mail_reserva(subject, message, from_email, recipient_list):
+    try:
+        send_mail(
+            subject,
+            message,
+            from_email,
+            recipient_list,
+            fail_silently=False,
+        )
+    except Exception as e:
+        logger.error(f"❌ Error enviando correo async: {str(e)}")
