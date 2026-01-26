@@ -20,6 +20,7 @@ from user.models import Cliente
 import threading
 from django.core.mail import send_mail
 from django.conf import settings
+from back.utils.email_service import enviar_mail_resend
 
 
 logger = logging.getLogger(__name__)
@@ -62,45 +63,43 @@ class ReservaViewSet(viewsets.ModelViewSet):
             try:
                 # MAIL ADMIN
                 mensaje_admin = f"""
-    Nueva reserva registrada.
+                <p><strong>Nueva reserva registrada</strong></p>
+                <p>
+                Cliente: {nombre_cliente}<br>
+                Correo: {correo_cliente}<br>
+                Servicio: {reserva.servicio.nombre}<br>
+                Fecha: {turno.fecha}<br>
+                Hora: {turno.hora}<br>
+                Sucursal: {turno.sucursal.nombre}
+                </p>
+                """
 
-    Cliente: {nombre_cliente}
-    Correo: {correo_cliente}
-
-    Servicio: {reserva.servicio.nombre}
-    Fecha: {turno.fecha}
-    Hora: {turno.hora}
-    Sucursal: {turno.sucursal.nombre}
-    """
-
-                send_mail(
-                    'Nueva Reserva de Turno',
-                    mensaje_admin,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [settings.ADMIN_EMAIL],
-                    fail_silently=False,
+                enviar_mail_resend(
+                    subject="Nueva Reserva de Turno",
+                    html=mensaje_admin,
+                    to=[settings.ADMIN_EMAIL]
                 )
 
                 # MAIL CLIENTE
                 mensaje_cliente = f"""
-    Hola {nombre_cliente},
+                <p>Hola <strong>{nombre_cliente}</strong>,</p>
 
-    ¡Gracias por reservar en Service del Automotor! 🚗🔧
+                <p>Gracias por reservar en <strong>Service del Automotor</strong> 🚗🔧</p>
 
-    📌 Servicio: {reserva.servicio.nombre}
-    📅 Fecha: {turno.fecha}
-    ⏰ Hora: {turno.hora}
-    🏢 Sucursal: {turno.sucursal.nombre}
+                <ul>
+                <li>Servicio: {reserva.servicio.nombre}</li>
+                <li>Fecha: {turno.fecha}</li>
+                <li>Hora: {turno.hora}</li>
+                <li>Sucursal: {turno.sucursal.nombre}</li>
+                </ul>
+                <p>!Te esperamos!</p>
+                <p>Ante cualquier consulta o cancelacion de la reserva comunicate con nosotros.</p>
+                """
 
-    ¡Te esperamos!
-    """
-
-                send_mail(
-                    'Confirmación de tu reserva',
-                    mensaje_cliente,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [correo_cliente],
-                    fail_silently=False,
+                enviar_mail_resend(
+                    subject="Confirmación de tu reserva",
+                    html=mensaje_cliente,
+                    to=[correo_cliente]
                 )
 
                 logger.info(f"📧 Correos enviados para reserva ID={reserva.id}")
