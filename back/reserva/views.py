@@ -20,7 +20,7 @@ from user.models import Cliente
 import threading
 from django.core.mail import send_mail
 from django.conf import settings
-from back.utils.email_service import enviar_mail_resend
+
 
 
 logger = logging.getLogger(__name__)
@@ -31,10 +31,10 @@ class ReservaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated] 
 
     
-# SE ENVIA LA RESERVA AL CORREO DEL ADMIN Y CLIENTE
+
 # TAMBIEN SE CONFIRMA LA RESERVA Y SE ENVIA LOS DATOS A LA DB Y EL TURNO DISPONIBLE PASA A FALSE
     def perform_create(self, serializer):
-        logger.debug(f"📥 Datos validados recibidos: {serializer.validated_data}")
+        logger.debug(f" Datos validados recibidos: {serializer.validated_data}")
         self.reservar_turno(serializer)
 
     def reservar_turno(self, serializer):
@@ -55,72 +55,30 @@ class ReservaViewSet(viewsets.ModelViewSet):
             )
 
             nombre_cliente = cliente.user.get_full_name()
-            correo_cliente = cliente.user.email
 
             logger.info(f"Reserva creada con éxito ID={reserva.id}")
 
-            # ================= MAILS =================
-            try:
-                # MAIL ADMIN
-                mensaje_admin = f"""
-                <p><strong>Nueva reserva registrada</strong></p>
-                <p>
-                Cliente: {nombre_cliente}<br>
-                Correo: {correo_cliente}<br>
-                Servicio: {reserva.servicio.nombre}<br>
-                Fecha: {turno.fecha}<br>
-                Hora: {turno.hora}<br>
-                Sucursal: {turno.sucursal.nombre}
-                </p>
-                """
+            # MENSAJE WHATSAPP
+            mensaje_whatsapp = (
+                f"Hola, soy {nombre_cliente}.\n\n"
+                f"Reservé un turno:\n"
+                f"🛠 Servicio: {reserva.servicio.nombre}\n"
+                f"📅 Fecha: {turno.fecha}\n"
+                f"⏰ Hora: {turno.hora}\n"
+                f"📍 Sucursal: {turno.sucursal.nombre}\n\n"
+                f"Gracias."
+            )
 
-                enviar_mail_resend(
-                    subject="Nueva Reserva de Turno",
-                    html=mensaje_admin,
-                    to=[settings.ADMIN_EMAIL]
-                )
-
-                # MAIL CLIENTE
-                mensaje_cliente = f"""
-                <p>Hola <strong>{nombre_cliente}</strong>,</p>
-
-                <p>Gracias por reservar en <strong>Service del Automotor</strong> 🚗🔧</p>
-
-                <ul>
-                <li>Servicio: {reserva.servicio.nombre}</li>
-                <li>Fecha: {turno.fecha}</li>
-                <li>Hora: {turno.hora}</li>
-                <li>Sucursal: {turno.sucursal.nombre}</li>
-                </ul>
-                <p>!Te esperamos!</p>
-                <p>Ante cualquier consulta o cancelacion de la reserva comunicate con nosotros.</p>
-                """
-
-                enviar_mail_resend(
-                    subject="Confirmación de tu reserva",
-                    html=mensaje_cliente,
-                    to=[correo_cliente]
-                )
-
-                logger.info(f"📧 Correos enviados para reserva ID={reserva.id}")
-
-            except Exception as mail_error:
-                logger.error(f"❌ Error enviando correos: {mail_error}")
+            return Response(
+                {
+                    "reserva_id": reserva.id,
+                    "mensaje_whatsapp": mensaje_whatsapp
+                },
+                status=status.HTTP_201_CREATED
+            )
 
         except Exception as e:
             logger.exception(f"Error creando reserva: {str(e)}")
             raise
 
-
-def enviar_mail_reserva(subject, message, recipient_list):
-    try:
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            recipient_list,
-            fail_silently=False,
-        )
-    except Exception as e:
-        logger.error(f"❌ Error enviando correo async: {str(e)}")
 

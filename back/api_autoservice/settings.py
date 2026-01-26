@@ -25,9 +25,11 @@ import dj_database_url
 #EMAIL_TIMEOUT = 10
 #DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 #ADMIN_EMAIL = EMAIL_HOST_USER
-RESEND_API_KEY = config('RESEND_API_KEY')
-DEFAULT_FROM_EMAIL = "Service del Automotor <onboarding@resend.dev>"
-ADMIN_EMAIL = config('ADMIN_EMAIL')
+
+
+
+
+
 
 
 
