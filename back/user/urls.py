@@ -12,6 +12,7 @@ from . import views
 from .views import obtener_perfil,PerfilClienteView,obtener_perfil_reserva, CustomTokenObtainPairView
 from .views import ClienteViewSet
 from rest_framework.routers import DefaultRouter
+from user.password_reset_views import password_reset_confirmar, password_reset_request
 
 router = DefaultRouter()
 router.register(r'clientes', ClienteViewSet)
@@ -26,4 +27,8 @@ urlpatterns = [
     path('perfil-cliente/', PerfilClienteView.as_view(), name='perfil-cliente'),
     path('', include(router.urls)),
     path('perfil-reserva/',obtener_perfil_reserva, name='obtener_perfil_reserva'),
+    path('password-reset/', password_reset_request),
+    path('password-reset-confirmar/', password_reset_confirmar)
+
 ]
+

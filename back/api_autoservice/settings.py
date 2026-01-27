@@ -15,6 +15,8 @@ import dj_database_url
 
 
 # configuracion para recibir las reservas y recuperar contraseñas
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 #EMAIL_HOST = config('EMAIL_HOST')
 #EMAIL_PORT = config('EMAIL_PORT', cast=int)
