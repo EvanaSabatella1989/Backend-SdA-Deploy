@@ -15,7 +15,8 @@ class SucursalWriteSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Sucursal
-        fields = ['id', 'nombre', 'direccion', 'telefono', 'servicios']
+        fields = ['id', 'nombre', 'direccion', 'telefono','ciudad',
+'provincia', 'servicios']
 
 # solo get trae todos los datos del servicio
 class ServicioMiniSerializer(serializers.ModelSerializer):
@@ -30,4 +31,4 @@ class SucursalReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sucursal
-        fields = ['id', 'nombre', 'direccion', 'telefono', 'servicios']
+        fields = ['id', 'nombre', 'direccion', 'telefono','provincia','ciudad', 'servicios']
