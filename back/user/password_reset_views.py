@@ -17,39 +17,25 @@ User = get_user_model()
 def password_reset_request(request):
     email = request.data.get('email')
 
-    if not email:
-        return Response(
-            {"error": "El email es requerido"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        # IMPORTANTE: no revelar si el email existe o no
-        return Response(
-            {"message": "Si el correo existe, se enviará un email"},
-            status=status.HTTP_200_OK
-        )
+        # x seguridad, no decimos que no existe
+        return Response({
+            "message": "Si el usuario existe, se enviará el enlace"
+        })
 
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
 
-    reset_link = f"https://TU-FRONTEND/password-reset-confirm/{uid}/{token}/"
-    reset_link = f"{settings.FRONTEND_URL}/password-reset-confirm/{uid}/{token}/"
-
-    send_mail(
-        subject="Recuperación de contraseña",
-        message=f"Entrá al siguiente link para cambiar tu contraseña:\n{reset_link}",
-        from_email="no-reply@tuapp.com",
-        recipient_list=[user.email],
-        fail_silently=False,
+    reset_url = (
+        "https://evanasabatella1989.github.io/Frontend-SdA-Deploy/"
+        f"#/password-reset-confirm/{uid}/{token}"
     )
 
-    return Response(
-        {"message": "Si el correo existe, se enviará un email"},
-        status=status.HTTP_200_OK
-    )
+    return Response({
+        "reset_url": reset_url
+    })
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
