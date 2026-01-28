@@ -22,19 +22,34 @@ def password_reset_request(request):
     except User.DoesNotExist:
         # x seguridad, no decimos que no existe
         return Response({
-            "message": "Si el usuario existe, se enviará el enlace"
+            "message": "Si el usuario existe, se enviará un correo"
         })
 
     uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+    uid = uid.replace("=", "")
     token = default_token_generator.make_token(user)
 
     reset_url = (
         "https://evanasabatella1989.github.io/Frontend-SdA-Deploy/"
-        f"#/password-reset-confirm/{uid}/{token}"
+    f"#/password-reset-confirm/{uid}/{token}"
+    )
+
+    send_mail(
+        subject="Recuperación de contraseña",
+        message=(
+            "Hola!\n\n"
+            "Recibimos una solicitud para restablecer tu contraseña.\n\n"
+            f"Entrá al siguiente link:\n{reset_url}\n\n"
+            "Si no fuiste vos, ignorá este mensaje."
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        fail_silently=False,
     )
 
     return Response({
-        "reset_url": reset_url
+         "message": "Si el usuario existe, se enviará el enlace"
     })
 
 @api_view(['POST'])
@@ -47,22 +62,27 @@ def password_reset_confirmar(request):
     if not uid or not token or not new_password:
         return Response(
             {"error": "Datos incompletos"},
-            status=status.HTTP_400_BAD_REQUEST
+            status=400
         )
+
+    missing_padding = len(uid) % 4
+    if missing_padding:
+        uid += '=' * (4 - missing_padding)
 
     try:
         user_id = force_str(urlsafe_base64_decode(uid))
         user = User.objects.get(pk=user_id)
+
     except (User.DoesNotExist, ValueError, TypeError):
         return Response(
             {"error": "Token inválido"},
-            status=status.HTTP_400_BAD_REQUEST
+            status=400
         )
 
     if not default_token_generator.check_token(user, token):
         return Response(
             {"error": "Token inválido o expirado"},
-            status=status.HTTP_400_BAD_REQUEST
+            status=400
         )
 
     user.set_password(new_password)
