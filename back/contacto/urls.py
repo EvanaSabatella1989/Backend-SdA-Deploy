@@ -1,14 +1,16 @@
 from django.urls import path,include
 from rest_framework.routers import DefaultRouter
-from .views import ContactoViewSet
+# from .views import ContactoViewSet
+from .views import ContactoView
 from rest_framework import routers
 
-router = routers.DefaultRouter()
-router.register(r'contacto', ContactoViewSet, basename='contacto')
+# router = routers.DefaultRouter()
+# router.register(r'contacto', ContactoViewSet, basename='contacto')
 
-urlpatterns = router.urls
+# urlpatterns = router.urls
 
 urlpatterns = [
-    path('', include(router.urls)), 
+    # path('', include(router.urls)), 
     # path('contacto/', enviar_contacto, name='enviar_contacto'),
+    path("contacto/", ContactoView.as_view()),
 ]
