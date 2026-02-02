@@ -9,7 +9,7 @@
 from django.urls import path,include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from . import views
-from .views import obtener_perfil,PerfilClienteView,obtener_perfil_reserva, CustomTokenObtainPairView
+from .views import obtener_perfil,PerfilClienteView,obtener_perfil_reserva, CustomTokenObtainPairView,google_login
 from .views import ClienteViewSet
 from rest_framework.routers import DefaultRouter
 from user.password_reset_views import password_reset_confirmar, password_reset_request
@@ -28,7 +28,8 @@ urlpatterns = [
     path('', include(router.urls)),
     path('perfil-reserva/',obtener_perfil_reserva, name='obtener_perfil_reserva'),
     path('password-reset/', password_reset_request),
-    path('password-reset-confirmar/', password_reset_confirmar)
+    # path('password-reset-confirmar/', password_reset_confirmar),
+    # path('google/', google_login, name='google-login'),
 
 ]
 

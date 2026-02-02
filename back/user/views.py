@@ -104,6 +104,55 @@ def login_view(request):
 
     return Response({"message": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
 
+# from google.oauth2 import id_token
+# from google.auth.transport import requests
+# from django.contrib.auth import get_user_model
+
+# Google Login
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
+# def google_login(request):
+#     token = request.data.get("token")
+#     if not token:
+#         return Response({"message": "No se proporcionó token"}, status=status.HTTP_400_BAD_REQUEST)
+#
+#     try:
+#         from google.oauth2 import id_token
+#         from google.auth.transport import requests
+#
+#         GOOGLE_CLIENT_ID = "TU_CLIENT_ID_DE_GOOGLE"
+#
+#         # Validar token con Google
+#         idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
+#         email = idinfo.get("email")
+#         name = idinfo.get("name")
+#
+#         if not email:
+#             return Response({"message": "Email no disponible en Google"}, status=status.HTTP_400_BAD_REQUEST)
+#
+#         # Buscar o crear usuario
+#         User = get_user_model()
+#         user, created = User.objects.get_or_create(
+#             email=email,
+#             defaults={"username": email, "first_name": name}
+#         )
+#
+#         # Crear JWT con la función que ya tenés
+#         token_jwt = get_tokens_for_user(user)
+#
+#         return Response({
+#             "access_token": token_jwt["access"],
+#             "refresh_token": token_jwt["refresh"],
+#             "is_admin": user.is_staff,
+#             "first_name": user.first_name,
+#             "last_name": user.last_name,
+#             "id": user.id
+#         })
+#
+#     except ValueError:
+#         return Response({"message": "Token inválido"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 # Registro de usuario
 # @csrf_exempt
@@ -195,6 +244,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
 # Crear la vista JWT custom
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
 
     
 
