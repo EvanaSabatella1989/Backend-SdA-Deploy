@@ -1,5 +1,6 @@
 import requests
 from django.conf import settings
+from decouple import config
 
 # def enviar_whatsapp_admin(mensaje: str):
 #     url = f"https://graph.facebook.com/v18.0/{settings.WHATSAPP_PHONE_NUMBER_ID}/messages"
@@ -30,7 +31,7 @@ def enviar_whatsapp_admin(nombre, email, mensaje):
 
     payload = {
         "messaging_product": "whatsapp",
-        "to": "543794075761",  # admin En Producción (cuando pases la app a live)# ✔️ SÍ se usa siempre el 9# ✔️ Formato correcto:# 549XXXXXXXXX
+        "to": settings.WHATSAPP_PHONE_NUMBER,  # admin En Producción (cuando pases la app a live)# ✔️ SÍ se usa siempre el 9# ✔️ Formato correcto:# 549XXXXXXXXX
         "type": "template",
         "template": {
             "name": "nuevo_contacto",
