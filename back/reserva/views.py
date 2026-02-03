@@ -20,6 +20,8 @@ from user.models import Cliente
 import threading
 from django.core.mail import send_mail
 from django.conf import settings
+from rest_framework.decorators import action
+from django.utils import timezone
 
 
 
@@ -49,9 +51,14 @@ class ReservaViewSet(viewsets.ModelViewSet):
             turno.disponible = False
             turno.save()
 
+            # reserva = serializer.save(
+            #     cliente=cliente,
+            #     sucursal=turno.sucursal
+            # )
             reserva = serializer.save(
                 cliente=cliente,
-                sucursal=turno.sucursal
+                sucursal=turno.sucursal,
+                estado='confirmada'
             )
 
             nombre_cliente = cliente.user.get_full_name()
@@ -81,4 +88,52 @@ class ReservaViewSet(viewsets.ModelViewSet):
             logger.exception(f"Error creando reserva: {str(e)}")
             raise
 
+    # ---------- REPROGRAMAR ----------
 
+    @action(detail=True, methods=['post'], url_path='liberar-turno')
+    def liberar_turno(self, request, pk=None):
+        reserva = self.get_object()
+
+        # si el turno ya paso no se puede reprogramar
+        if reserva.turno and reserva.turno.fecha < timezone.now().date():
+            return Response(
+                {"detail": "El turno ya pasó"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # liberar turno actual
+        if reserva.turno:
+            reserva.turno.disponible = True
+            reserva.turno.save()
+
+
+        reserva.estado = 'cancelada'
+        reserva.save()
+
+        return Response(
+            {"detail": "Turno liberado, puede reservar uno nuevo"},
+            status=status.HTTP_200_OK
+        )
+
+    # ---------- CANCELAR ----------
+    @action(detail=True, methods=['put'], url_path='cancelar')
+    def cancelar_reserva(self, request, pk=None):
+        reserva = self.get_object()
+
+        if reserva.estado == 'cancelada':
+            return Response(
+                {"detail": "La reserva ya está cancelada"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if reserva.turno:
+            reserva.turno.disponible = True
+            reserva.turno.save()
+
+        reserva.estado = 'cancelada'
+        reserva.save()
+
+        return Response(
+            {"detail": "Reserva cancelada correctamente"},
+            status=status.HTTP_200_OK
+        )

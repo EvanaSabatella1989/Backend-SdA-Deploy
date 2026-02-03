@@ -14,6 +14,7 @@ class Reserva(models.Model):
     estado = models.CharField(max_length=20, choices=[
         ('pendiente', 'Pendiente'),
         ('confirmada', 'Confirmada'),
+        ('reprogramada', 'Reprogramada'),
         ('cancelada', 'Cancelada')
     ], default='pendiente')
 
