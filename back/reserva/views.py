@@ -22,7 +22,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from rest_framework.decorators import action
 from django.utils import timezone
-from .services.whatsapp_service import enviar_whatsapp_reserva
+from .services.whatsapp_service import enviar_whatsapp_reserva, enviar_whatsapp_cancelacion
 
 
 
@@ -167,22 +167,47 @@ class ReservaViewSet(viewsets.ModelViewSet):
     # ---------- CANCELAR ----------
     @action(detail=True, methods=['put'], url_path='cancelar')
     def cancelar_reserva(self, request, pk=None):
-        reserva = self.get_object()
+        try:
+            reserva = self.get_object()
+            cliente = reserva.cliente
+            turno = reserva.turno
 
-        if reserva.estado == 'cancelada':
-            return Response(
-                {"detail": "La reserva ya está cancelada"},
-                status=status.HTTP_400_BAD_REQUEST
+            # Si ya está cancelada
+            if reserva.estado == 'cancelada':
+                return Response(
+                    {"detail": "La reserva ya está cancelada"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Liberar turno
+            if turno:
+                turno.disponible = True
+                turno.save()
+
+            # Cambiar estado
+            reserva.estado = 'cancelada'
+            reserva.save()
+
+            # Datos para WhatsApp
+            vehiculo = reserva.vehiculo
+            vehiculo_texto = f"{vehiculo.marca} {vehiculo.modelo} ({vehiculo.anio_fabricacion})"
+
+            enviar_whatsapp_cancelacion(
+                nombre_cliente=cliente.user.get_full_name() or cliente.user.username,
+                email=cliente.user.email,
+                servicio=reserva.servicio.nombre,
+                sucursal=reserva.sucursal.nombre,
+                turno=f"{turno.fecha} {turno.hora}",
+                vehiculo=vehiculo_texto
             )
 
-        if reserva.turno:
-            reserva.turno.disponible = True
-            reserva.turno.save()
+            logger.info(f"❌ Reserva cancelada ID={reserva.id}")
 
-        reserva.estado = 'cancelada'
-        reserva.save()
+            return Response(
+                {"detail": "Reserva cancelada correctamente"},
+                status=status.HTTP_200_OK
+            )
 
-        return Response(
-            {"detail": "Reserva cancelada correctamente"},
-            status=status.HTTP_200_OK
-        )
+        except Exception as e:
+            logger.exception(f"❌ Error cancelando reserva: {str(e)}")
+            return Response({"error": str(e)}, status=500)
