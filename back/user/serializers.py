@@ -3,13 +3,14 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 from vehiculo.serializers import VehiculoSerializer
 from carrito.serializers import CarritoSerializer
-from user.models import Cliente
+from user.models import Cliente,Empleado, UserAccount
 from reserva.serializer import ReservaSerializer
 from vehiculo.serializers import VehiculoReservaSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 import re
+
 
 class UserSerializer(serializers.ModelSerializer):
     vehiculos = VehiculoSerializer(many=True, read_only=True, source="cliente.vehiculo_set")
@@ -150,3 +151,91 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
 
         return token
+
+#para crear al empleado
+class EmpleadoCreateSerializer(serializers.ModelSerializer):
+
+    email = serializers.EmailField(write_only=True)
+    password = serializers.CharField(write_only=True)
+    first_name = serializers.CharField(write_only=True)
+    last_name = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = Empleado
+        fields = [
+            'id',
+            'cargo',
+            'email',
+            'password',
+            'first_name',
+            'last_name'
+        ]
+
+    def create(self, validated_data):
+        email = validated_data.pop('email')
+        password = validated_data.pop('password')
+        first_name = validated_data.pop('first_name')
+        last_name = validated_data.pop('last_name')
+
+        user = UserAccount.objects.create_user(
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            is_client=False,
+            is_staff=True  # si querés que pueda entrar al admin
+        )
+
+        empleado = Empleado.objects.create(
+            user=user,
+            **validated_data
+        )
+
+        return empleado
+
+    #para leer empleado
+class EmpleadoSerializer(serializers.ModelSerializer):
+        first_name = serializers.CharField(source='user.first_name', read_only=True)
+        last_name = serializers.CharField(source='user.last_name', read_only=True)
+        email = serializers.CharField(source='user.email', read_only=True)
+
+        class Meta:
+            model = Empleado
+            fields = [
+                'id',
+                'cargo',
+                'first_name',
+                'last_name',
+                'email'
+            ]
+#para editar
+class EmpleadoUpdateSerializer(serializers.ModelSerializer):
+
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
+    email = serializers.EmailField(source='user.email')
+
+    class Meta:
+        model = Empleado
+        fields = [
+            'cargo',
+            'first_name',
+            'last_name',
+            'email'
+        ]
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop('user')
+
+        # actualizar empleado
+        instance.cargo = validated_data.get('cargo', instance.cargo)
+        instance.save()
+
+        # actualizar usuario
+        user = instance.user
+        user.first_name = user_data.get('first_name', user.first_name)
+        user.last_name = user_data.get('last_name', user.last_name)
+        user.email = user_data.get('email', user.email)
+        user.save()
+
+        return instance

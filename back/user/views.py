@@ -63,8 +63,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import CustomTokenObtainPairSerializer
 
-from user.models import Cliente
-from .serializers import ClienteSerializer, UserSerializer, UserReservaSerializer,UserRegisterSerializer
+from user.models import Cliente,Empleado
+from .serializers import ClienteSerializer, UserSerializer, UserReservaSerializer,UserRegisterSerializer,EmpleadoCreateSerializer,EmpleadoSerializer,EmpleadoUpdateSerializer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 
@@ -246,6 +246,14 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
-    
+#para empleados
+class EmpleadoViewSet(viewsets.ModelViewSet):
+    queryset = Empleado.objects.all()
 
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return EmpleadoCreateSerializer
+        if self.action in ['update', 'partial_update']:
+            return EmpleadoUpdateSerializer
+        return EmpleadoSerializer
 

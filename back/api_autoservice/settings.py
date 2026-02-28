@@ -122,6 +122,7 @@ INSTALLED_APPS = [
     'carrito',
     'django_extensions',
     'contacto',
+    'orden_trabajo',
 ]
 
 MIDDLEWARE = [

@@ -10,6 +10,7 @@ from servicio import views
 from categoria.views import CategoriaViewSet
 from carrito.views import Carrito
 from vehiculo.views import Vehiculo
+from orden_trabajo.models import OrdenTrabajo
 from rest_framework import routers
 
 router = routers.DefaultRouter()
@@ -36,7 +37,8 @@ urlpatterns = [
     path('api/', include('categoria.urls')),
     path('api/',include('turno.urls')),
     path('api/', include('carrito.urls')),
-    path('api/', include('vehiculo.urls'))
+    path('api/', include('vehiculo.urls')),
+    path('api/', include('orden_trabajo.urls'))
 ]
 # ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
