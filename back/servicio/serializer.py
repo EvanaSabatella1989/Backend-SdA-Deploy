@@ -21,7 +21,7 @@ class ServicioNombreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Servicio
-        fields = ['id', 'nombre', 'descripcion', 'precio', 'imagen', 'categoria', 'categoriaNombre']
+        fields = ['id', 'nombre', 'descripcion', 'precio', 'imagen', 'categoria', 'categoriaNombre', 'area']
 
 
 # para que me traiga la sucursal relacionada
@@ -31,4 +31,4 @@ class ServicioConSucursalesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Servicio
-        fields = ['id', 'nombre', 'descripcion', 'precio', 'imagen', 'categoria', 'categoriaNombre', 'sucursales']
+        fields = ['id', 'nombre', 'descripcion', 'precio', 'imagen', 'categoria', 'categoriaNombre', 'sucursales', 'area']

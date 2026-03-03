@@ -79,30 +79,30 @@ def get_tokens_for_user(user):
 
 
 # Login
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def login_view(request):
-    email = request.data.get("email", None)
-    password = request.data.get("password", None)
-
-    if not email or not password:
-        return Response({"message": "Email y contraseña son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
-
-    user = authenticate(username=email, password=password)
-    if user:
-        rest_framework_login(request._request, user)
-        token = get_tokens_for_user(user)
-
-        return Response({
-            "access_token": token["access"],
-            "refresh_token": token["refresh"],
-            "is_admin": user.is_staff,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "id": user.id
-        }, status=status.HTTP_200_OK)
-
-    return Response({"message": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
+# def login_view(request):
+#     email = request.data.get("email", None)
+#     password = request.data.get("password", None)
+#
+#     if not email or not password:
+#         return Response({"message": "Email y contraseña son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
+#
+#     user = authenticate(username=email, password=password)
+#     if user:
+#         rest_framework_login(request._request, user)
+#         token = get_tokens_for_user(user)
+#
+#         return Response({
+#             "access_token": token["access"],
+#             "refresh_token": token["refresh"],
+#             "is_admin": user.is_staff,
+#             "first_name": user.first_name,
+#             "last_name": user.last_name,
+#             "id": user.id
+#         }, status=status.HTTP_200_OK)
+#
+#     return Response({"message": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
 
 # from google.oauth2 import id_token
 # from google.auth.transport import requests
@@ -170,6 +170,50 @@ def login_view(request):
 #     return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 # register.parser_classes = [JSONParser]  
 
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_view(request):
+    email = request.data.get("email", None)
+    password = request.data.get("password", None)
+
+    if not email or not password:
+        return Response(
+            {"message": "Email y contraseña son requeridos"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    user = authenticate(username=email, password=password)
+
+    if user:
+        rest_framework_login(request._request, user)
+        token = get_tokens_for_user(user)
+
+        # 🔥 Detectar si es empleado
+        try:
+            empleado = Empleado.objects.get(user=user)
+            cargo = empleado.cargo
+            es_empleado = True
+        except Empleado.DoesNotExist:
+            cargo = None
+            es_empleado = False
+
+        return Response({
+            "access_token": token["access"],
+            "refresh_token": token["refresh"],
+            "is_admin": user.is_superuser,
+            "is_staff": user.is_staff,
+            "is_empleado": es_empleado,
+            "cargo": cargo,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "id": user.id
+        }, status=status.HTTP_200_OK)
+
+    return Response(
+        {"message": "Credenciales inválidas"},
+        status=status.HTTP_401_UNAUTHORIZED
+    )
 
 # registro tomando la doble password
 @csrf_exempt

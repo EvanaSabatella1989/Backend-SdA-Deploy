@@ -3,8 +3,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import viewsets
 from django.core.mail import send_mail
+
+from orden_trabajo.models import OrdenTrabajo
 from .serializer import ReservaSerializer
-from .models import Reserva,Turno
+from .models import Reserva
 import logging
 from django.conf import settings
 from datetime import datetime, timedelta
@@ -23,8 +25,8 @@ from django.conf import settings
 from rest_framework.decorators import action
 from django.utils import timezone
 from .services.whatsapp_service import enviar_whatsapp_reserva, enviar_whatsapp_cancelacion
-
-
+from datetime import date
+from django.db import transaction
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +36,73 @@ class ReservaViewSet(viewsets.ModelViewSet):
     serializer_class = ReservaSerializer
     permission_classes = [IsAuthenticated] 
 
-    
+    #para que el empleado confirme la reserva
+    @action(detail=True, methods=['post'], url_path='tomar')
+    def tomar_reserva(self, request, pk=None):
+        with transaction.atomic():
+
+            reserva = Reserva.objects.select_for_update().get(pk=pk)
+
+            try:
+                empleado = request.user.empleado
+            except:
+                return Response({"detail": "Solo empleados"}, status=403)
+
+            if reserva.estado != 'pendiente':
+                return Response({"detail": "Ya fue tomada"}, status=400)
+
+            if reserva.servicio.area != empleado.cargo:
+                return Response({"detail": "No corresponde a tu área"}, status=403)
+
+            OrdenTrabajo.objects.create(
+                reserva=reserva,
+                vehiculo=reserva.vehiculo,
+                empleado=empleado,
+                estado='en_proceso'
+            )
+
+            reserva.estado = 'confirmada'
+            reserva.save()
+
+        return Response({"detail": "Reserva tomada correctamente"})
+
+        # Crear orden de trabajo
+        OrdenTrabajo.objects.create(
+            reserva=reserva,
+            vehiculo=reserva.vehiculo,
+            empleado=empleado,
+            estado='en_proceso'
+        )
+
+        reserva.estado = 'confirmada'
+        reserva.save()
+
+        return Response(
+            {"detail": "Reserva tomada correctamente"},
+            status=status.HTTP_200_OK
+        )
+
+    #para que el empleado vea las reservas
+    @action(detail=False, methods=['get'], url_path='hoy-empleado')
+    def reservas_hoy_empleado(self, request):
+        try:
+            empleado = request.user.empleado
+        except:
+            return Response(
+                {"detail": "No autorizado"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        reservas = Reserva.objects.filter(
+            turno__fecha=date.today(),
+            estado='pendiente',
+            servicio__area=empleado.cargo
+        )
+
+        serializer = self.get_serializer(reservas, many=True)
+        return Response(serializer.data)
+
+
 
 # TAMBIEN SE CONFIRMA LA RESERVA Y SE ENVIA LOS DATOS A LA DB Y EL TURNO DISPONIBLE PASA A FALSE
     def perform_create(self, serializer):
@@ -105,7 +173,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
             reserva = serializer.save(
                 cliente=cliente,
                 sucursal=turno.sucursal,
-                estado='confirmada'
+                estado='pendiente'
             )
 
             nombre_cliente = cliente.user.get_full_name() or cliente.user.username
@@ -118,7 +186,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
             vehiculo = serializer.validated_data['vehiculo']
             vehiculo_texto = f"{vehiculo.marca} {vehiculo.modelo} ({vehiculo.anio_fabricacion})"
 
-            # 🔔 ENVIAR WHATSAPP (notificación interna)
+            #  ENVIAR WHATSAPP (notificación interna)
             enviar_whatsapp_reserva(
                 nombre_cliente=nombre_cliente,
                 email=email,

@@ -223,9 +223,15 @@ class Cliente(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
 class Empleado(models.Model):
-    cargo = models.CharField(max_length=255)
+    #cargo = models.CharField(max_length=255)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-
+    CARGOS  = [
+        ('lavanderia', 'Lavandería'),
+        ('gomeria', 'Gomería'),
+        ('electricidad', 'Electricidad'),
+        ('chapa_pintura', 'Chapa y Pintura'),
+    ]
+    cargo = models.CharField(max_length=30, choices=CARGOS,null=True,blank=True)
 
 # -------------------------
 # Signal para crear Cliente automáticamente

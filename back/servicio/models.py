@@ -18,6 +18,13 @@ class Servicio(models.Model):
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     fecha_creacion= models.DateTimeField(default=datetime.now)
     public_id = models.CharField(max_length=255, blank=True, null=True)
+    AREAS = [
+        ('lavanderia', 'Lavandería'),
+        ('gomeria', 'Gomería'),
+        ('electricidad', 'Electricidad'),
+        ('chapa_pintura', 'Chapa y Pintura'),
+    ]
+    area = models.CharField(max_length=30,choices=AREAS,null=True,blank=True)
     # sucursal = models.ForeignKey(Sucursal, on_delete=models.CASCADE, related_name="servicios",null=True, blank=True)
 
     class Meta:
