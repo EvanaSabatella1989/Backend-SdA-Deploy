@@ -48,7 +48,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
             except:
                 return Response({"detail": "Solo empleados"}, status=403)
 
-            if reserva.estado != 'pendiente':
+            if reserva.estado != 'en_proceso':
                 return Response({"detail": "Ya fue tomada"}, status=400)
 
             if reserva.servicio.area != empleado.cargo:
@@ -58,7 +58,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 reserva=reserva,
                 vehiculo=reserva.vehiculo,
                 empleado=empleado,
-                estado='en_proceso'
+                estado='pendiente'
             )
 
             reserva.estado = 'confirmada'
@@ -66,21 +66,6 @@ class ReservaViewSet(viewsets.ModelViewSet):
 
         return Response({"detail": "Reserva tomada correctamente"})
 
-        # Crear orden de trabajo
-        OrdenTrabajo.objects.create(
-            reserva=reserva,
-            vehiculo=reserva.vehiculo,
-            empleado=empleado,
-            estado='en_proceso'
-        )
-
-        reserva.estado = 'confirmada'
-        reserva.save()
-
-        return Response(
-            {"detail": "Reserva tomada correctamente"},
-            status=status.HTTP_200_OK
-        )
 
     #para que el empleado vea las reservas
     @action(detail=False, methods=['get'], url_path='hoy-empleado')
@@ -93,12 +78,36 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        reservas = Reserva.objects.filter(
-            turno__fecha=date.today(),
-            estado='pendiente',
-            servicio__area=empleado.cargo
+        hoy = timezone.localdate()
+
+        print("Empleado cargo visible:", empleado.cargo)
+        print("Empleado cargo RAW:", repr(empleado.cargo))
+        print("Áreas existentes en reservas:",
+              list(
+                  Reserva.objects.filter(
+                      estado='pendiente',
+                      servicio__area=empleado.cargo
+                  ).values_list("turno__fecha", flat=True)
+              )
+            )
+
+        print(
+            list(
+                Reserva.objects.filter(
+                    servicio__area=empleado.cargo
+                ).values_list("turno__fecha", "estado")
+            )
         )
 
+
+        reservas = Reserva.objects.filter(
+            turno__fecha=hoy,
+            estado='pendiente',
+            servicio__area=empleado.cargo
+
+        )
+
+        print("Cantidad final que devuelve:", reservas.count())
         serializer = self.get_serializer(reservas, many=True)
         return Response(serializer.data)
 
