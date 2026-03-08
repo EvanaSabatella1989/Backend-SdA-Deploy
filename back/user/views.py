@@ -270,7 +270,7 @@ class PerfilClienteView(APIView):
 
 # Admin - CRUD de clientes
 class ClienteViewSet(viewsets.ModelViewSet):
-    queryset = Cliente.objects.all()
+    queryset = Cliente.objects.filter(user__is_client=True)
     serializer_class = ClienteSerializer
 
     def destroy(self, request, *args, **kwargs):
