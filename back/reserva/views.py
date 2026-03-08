@@ -36,83 +36,6 @@ class ReservaViewSet(viewsets.ModelViewSet):
     serializer_class = ReservaSerializer
     permission_classes = [IsAuthenticated] 
 
-    #para que el empleado confirme la reserva
-    @action(detail=True, methods=['post'], url_path='tomar')
-    def tomar_reserva(self, request, pk=None):
-        with transaction.atomic():
-
-            reserva = Reserva.objects.select_for_update().get(pk=pk)
-
-            try:
-                empleado = request.user.empleado
-            except:
-                return Response({"detail": "Solo empleados"}, status=403)
-
-            if reserva.estado != 'en_proceso':
-                return Response({"detail": "Ya fue tomada"}, status=400)
-
-            if reserva.servicio.area != empleado.cargo:
-                return Response({"detail": "No corresponde a tu área"}, status=403)
-
-            OrdenTrabajo.objects.create(
-                reserva=reserva,
-                vehiculo=reserva.vehiculo,
-                empleado=empleado,
-                estado='pendiente'
-            )
-
-            reserva.estado = 'confirmada'
-            reserva.save()
-
-        return Response({"detail": "Reserva tomada correctamente"})
-
-
-    #para que el empleado vea las reservas
-    @action(detail=False, methods=['get'], url_path='hoy-empleado')
-    def reservas_hoy_empleado(self, request):
-        try:
-            empleado = request.user.empleado
-        except:
-            return Response(
-                {"detail": "No autorizado"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        hoy = timezone.localdate()
-
-        print("Empleado cargo visible:", empleado.cargo)
-        print("Empleado cargo RAW:", repr(empleado.cargo))
-        print("Áreas existentes en reservas:",
-              list(
-                  Reserva.objects.filter(
-                      estado='pendiente',
-                      servicio__area=empleado.cargo
-                  ).values_list("turno__fecha", flat=True)
-              )
-            )
-
-        print(
-            list(
-                Reserva.objects.filter(
-                    servicio__area=empleado.cargo
-                ).values_list("turno__fecha", "estado")
-            )
-        )
-
-
-        reservas = Reserva.objects.filter(
-            turno__fecha=hoy,
-            estado='pendiente',
-            servicio__area=empleado.cargo
-
-        )
-
-        print("Cantidad final que devuelve:", reservas.count())
-        serializer = self.get_serializer(reservas, many=True)
-        return Response(serializer.data)
-
-
-
 # TAMBIEN SE CONFIRMA LA RESERVA Y SE ENVIA LOS DATOS A LA DB Y EL TURNO DISPONIBLE PASA A FALSE
     def perform_create(self, serializer):
         logger.debug(f" Datos validados recibidos: {serializer.validated_data}")
@@ -233,7 +156,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
             reserva.turno.save()
 
 
-        reserva.estado = 'cancelada'
+        reserva.estado = 'reprogramada'
         reserva.save()
 
         return Response(
@@ -288,3 +211,78 @@ class ReservaViewSet(viewsets.ModelViewSet):
         except Exception as e:
             logger.exception(f"❌ Error cancelando reserva: {str(e)}")
             return Response({"error": str(e)}, status=500)
+
+
+        # PARA EL EMPLEADO
+        # para que el empleado confirme la reserva
+    @action(detail=True, methods=['post'], url_path='tomar')
+    def tomar_reserva(self, request, pk=None):
+            with transaction.atomic():
+
+                reserva = Reserva.objects.select_for_update().get(pk=pk)
+
+                try:
+                    empleado = request.user.empleado
+                except:
+                    return Response({"detail": "Solo empleados"}, status=403)
+
+                if reserva.estado != 'en_proceso':
+                    return Response({"detail": "Ya fue tomada"}, status=400)
+
+                if reserva.servicio.area != empleado.cargo:
+                    return Response({"detail": "No corresponde a tu área"}, status=403)
+
+                OrdenTrabajo.objects.create(
+                    reserva=reserva,
+                    vehiculo=reserva.vehiculo,
+                    empleado=empleado,
+                    estado='pendiente'
+                )
+
+                reserva.estado = 'confirmada'
+                reserva.save()
+
+            return Response({"detail": "Reserva tomada correctamente"})
+
+        # para que el empleado vea las reservas
+    @action(detail=False, methods=['get'], url_path='hoy-empleado')
+    def reservas_hoy_empleado(self, request):
+            try:
+                empleado = request.user.empleado
+            except:
+                return Response(
+                    {"detail": "No autorizado"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            hoy = timezone.localdate()
+
+            print("Empleado cargo visible:", empleado.cargo)
+            print("Empleado cargo RAW:", repr(empleado.cargo))
+            print("Áreas existentes en reservas:",
+                  list(
+                      Reserva.objects.filter(
+                          estado='pendiente',
+                          servicio__area=empleado.cargo
+                      ).values_list("turno__fecha", flat=True)
+                  )
+                  )
+
+            print(
+                list(
+                    Reserva.objects.filter(
+                        servicio__area=empleado.cargo
+                    ).values_list("turno__fecha", "estado")
+                )
+            )
+
+            reservas = Reserva.objects.filter(
+                turno__fecha=hoy,
+                estado='pendiente',
+                servicio__area=empleado.cargo
+
+            )
+
+            print("Cantidad final que devuelve:", reservas.count())
+            serializer = self.get_serializer(reservas, many=True)
+            return Response(serializer.data)
