@@ -226,7 +226,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 except:
                     return Response({"detail": "Solo empleados"}, status=403)
 
-                if reserva.estado != 'en_proceso':
+                if reserva.estado != 'pendiente':
                     return Response({"detail": "Ya fue tomada"}, status=400)
 
                 if reserva.servicio.area != empleado.cargo:
