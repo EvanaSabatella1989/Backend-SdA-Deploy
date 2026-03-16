@@ -27,6 +27,7 @@ from django.utils import timezone
 from .services.whatsapp_service import enviar_whatsapp_reserva, enviar_whatsapp_cancelacion
 from datetime import date
 from django.db import transaction
+from django.db.models import Q
 
 
 logger = logging.getLogger(__name__)
@@ -286,3 +287,61 @@ class ReservaViewSet(viewsets.ModelViewSet):
             print("Cantidad final que devuelve:", reservas.count())
             serializer = self.get_serializer(reservas, many=True)
             return Response(serializer.data)
+
+    # @action(detail=False, methods=['get'], url_path='mes-empleado')
+    # def reservas_mes_empleado(self, request):
+    #     print("Endpoint reservas mes empleado ejecutado")
+    #     try:
+    #         empleado = request.user.empleado
+    #     except:
+    #         return Response({"detail": "No autorizado"}, status=403)
+
+    #     hoy = timezone.localdate()
+
+    #     reservas = Reserva.objects.filter(
+    #         turno__fecha__gte=hoy,
+    #         turno__fecha__month=hoy.month,
+    #         estado='pendiente',
+    #         sucursal=empleado.sucursal,     # misma sucursal
+    #         servicio__area=empleado.cargo   # misma área
+    #     ).order_by("turno__fecha", "turno__hora")
+
+    #     print("Reservas encontradas:", reservas.count())  # 👈 clave
+
+    #     serializer = self.get_serializer(reservas, many=True)
+    #     return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='mes-empleado')
+    def reservas_mes_empleado(self, request):
+
+        empleado = request.user.empleado
+        hoy = timezone.localdate()
+
+        print("Usuario logueado:", request.user.email)
+        print("Empleado ID:", empleado.id)
+        print("Sucursal empleado:", empleado.sucursal_id)
+        print("Cargo empleado:", empleado.cargo)
+
+        reservas = Reserva.objects.filter(
+            turno__fecha__gte=hoy,
+            turno__fecha__month=hoy.month,
+            estado='pendiente',
+            sucursal_id=empleado.sucursal_id,     # misma sucursal
+            servicio__area=empleado.cargo   # misma área
+        ).order_by("turno__fecha", "turno__hora")
+        
+
+        print("Reservas desde hoy:", reservas.count())
+
+        for r in reservas:
+            print(
+                "Reserva:",
+                r.id,
+                r.turno.fecha,
+                r.servicio.area,
+                r.estado,
+                r.sucursal
+            )
+
+        serializer = self.get_serializer(reservas, many=True)
+        return Response(serializer.data)

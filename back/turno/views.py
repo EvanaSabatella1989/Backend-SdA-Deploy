@@ -71,7 +71,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
         serializer = TurnoSerializer(turnos, many=True)
         return Response(serializer.data)
 
-    # que sean turnos con horarios restringidos 9 a 18
+    # que sean turnos con horarios restringidos 9 a 21
     @action(detail=False, methods=['post'], url_path='generar-turnos')
     def generar_turnos(self, request):
         sucursal_id = request.data.get('sucursal_id')

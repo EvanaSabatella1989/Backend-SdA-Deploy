@@ -161,6 +161,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.apps import apps  # Para usar apps.get_model en signals
+from sucursal.models import Sucursal
 
 
 # -------------------------
@@ -232,6 +233,14 @@ class Empleado(models.Model):
         ('chapa_pintura', 'Chapa y Pintura'),
     ]
     cargo = models.CharField(max_length=30, choices=CARGOS,null=True,blank=True)
+
+    sucursal = models.ForeignKey(
+        Sucursal,
+        on_delete=models.CASCADE,
+        related_name="empleados",
+        null=True,
+        blank=True
+    )
 
 # -------------------------
 # Signal para crear Cliente automáticamente
