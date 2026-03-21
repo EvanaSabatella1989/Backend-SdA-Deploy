@@ -63,7 +63,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
         turnos = Turno.objects.filter(
             sucursal_id=sucursal_id,
             disponible=True,
-        fecha__gte = hoy
+            fecha__gte = hoy
         ).exclude(
             fecha=hoy, hora__lt=hora_actual
         ).order_by('fecha', 'hora')
@@ -71,7 +71,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
         serializer = TurnoSerializer(turnos, many=True)
         return Response(serializer.data)
 
-    # que sean turnos con horarios restringidos 9 a 18
+    # que sean turnos con horarios restringidos 9 a 21
     @action(detail=False, methods=['post'], url_path='generar-turnos')
     def generar_turnos(self, request):
         sucursal_id = request.data.get('sucursal_id')
@@ -81,7 +81,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
         if not sucursal_id or not fecha:
             return Response({"detail": "Faltan datos"}, status=400)
 
-        horarios = [time(hora, 0) for hora in range(9, 18)]  # 9:00 a 17:00
+        horarios = [time(hora, 0) for hora in range(9, 22)]  # 9:00 a 21:00
         creados = 0
 
         for hora in horarios:
