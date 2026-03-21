@@ -89,3 +89,29 @@ class OrdenTrabajoSerializer(serializers.ModelSerializer):
             validated_data['empleado'] = Empleado.objects.get(id=empleado_id)
 
         return OrdenTrabajo.objects.create(**validated_data)
+
+# para llamar en perfil para ver los servicios
+class OrdenTrabajoSerializerDos(serializers.ModelSerializer):
+    servicio_nombre = serializers.CharField(
+        source='reserva.servicio.nombre', read_only=True
+    )
+    turno_fecha = serializers.DateField(
+        source='reserva.turno.fecha', read_only=True
+    )
+    turno_hora = serializers.TimeField(
+        source='reserva.turno.hora', read_only=True
+    )
+
+    class Meta:
+        model = OrdenTrabajo
+        fields = [
+            'id',
+            'estado',
+            'fecha_ingreso',
+            'fecha_egreso',
+            'diagnostico',
+            'observaciones',
+            'servicio_nombre',
+            'turno_fecha',
+            'turno_hora',
+        ]

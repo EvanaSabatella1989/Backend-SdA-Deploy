@@ -3,7 +3,7 @@ from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from orden_trabajo.models import OrdenTrabajo
-from orden_trabajo.serializer import OrdenTrabajoSerializer
+from orden_trabajo.serializer import OrdenTrabajoSerializer,OrdenTrabajoSerializerDos
 from rest_framework.decorators import action
 from django.utils import timezone
 
@@ -92,3 +92,23 @@ class OrdenTrabajoViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
+
+
+    # para que el usuario vea el estado del servicio realizado
+    @action(detail=False, methods=['get'], url_path='por-vehiculo')
+    def por_vehiculo(self, request):
+        vehiculo_id = request.query_params.get('vehiculo')
+        if not vehiculo_id:
+            return Response({"detail": "Falta el parámetro vehiculo"}, status=400)
+
+        ordenes = OrdenTrabajo.objects.filter(
+            vehiculo_id=vehiculo_id,
+            vehiculo__cliente__user=request.user
+        ).select_related('reserva__servicio', 'reserva__turno', 'empleado__user')
+
+        print("ordenes encontradas:", ordenes.count())
+        for o in ordenes:
+            print("orden:", o.id, "vehiculo:", o.vehiculo_id, "cliente user:", o.vehiculo.cliente.user)
+
+        serializer = OrdenTrabajoSerializerDos(ordenes, many=True)
+        return Response(serializer.data)
