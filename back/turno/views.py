@@ -77,6 +77,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
         sucursal_id = request.data.get('sucursal_id')
         fecha = request.data.get('fecha')  # formato: "2025-01-15"
 
+        print(f"sucursal_id: {sucursal_id}, fecha: {fecha}")
         if not sucursal_id or not fecha:
             return Response({"detail": "Faltan datos"}, status=400)
 
@@ -84,7 +85,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
         creados = 0
 
         for hora in horarios:
-            _, creado = Turno.objects.get_or_create(
+            _, creado = Turno.objects.update_or_create(
                 sucursal_id=sucursal_id,
                 fecha=fecha,
                 hora=hora,
@@ -93,4 +94,5 @@ class TurnoViewSet(viewsets.ModelViewSet):
             if creado:
                 creados += 1
 
+        print(f"Total creados: {creados}")
         return Response({"detail": f"{creados} turnos creados"})

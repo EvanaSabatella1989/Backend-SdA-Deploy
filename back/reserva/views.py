@@ -213,8 +213,8 @@ class ReservaViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=500)
 
 
-        # PARA EL EMPLEADO
-        # para que el empleado confirme la reserva
+    # PARA EL EMPLEADO
+    # para que el empleado confirme la reserva
     @action(detail=True, methods=['post'], url_path='tomar')
     def tomar_reserva(self, request, pk=None):
             with transaction.atomic():
@@ -226,7 +226,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 except:
                     return Response({"detail": "Solo empleados"}, status=403)
 
-                if reserva.estado != 'en_proceso':
+                if reserva.estado != 'pendiente':
                     return Response({"detail": "Ya fue tomada"}, status=400)
 
                 if reserva.servicio.area != empleado.cargo:
