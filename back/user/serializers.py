@@ -96,6 +96,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     def validate(self, data):
         password = data['password1']
 
+        if not re.search(r'[^a-zA-Z0-9]', password):
+            raise serializers.ValidationError({
+                "password1": ["La contraseña debe contener al menos un carácter especial (!@#$%^&*...)."]
+            })
+
         # bloquear solo letras
         if re.fullmatch(r'[a-zA-Z]+', password):
             raise serializers.ValidationError({
